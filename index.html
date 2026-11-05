@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- ایپ کا ورژن (جب بھی اپڈیٹ کرنا ہو، یہاں نمبر بڑھا دیں مثلا v1.2) -->
+    <meta name="app-version" content="v1.1">
     <title>Poultry Farm Manager - WANapps</title>
     <!-- Chart.js لائبریری -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -267,7 +269,6 @@
 
 <!-- ==================== اسکرین 3: کیش بک و حسابات (خرچہ) ==================== -->
 <div class="app-screen no-print" id="screen-finance">
-    <!-- گرانڈ ٹوٹل اخراجات کا کارڈ -->
     <div class="card" style="border: 2px solid #c62828; background: linear-gradient(135deg, #ffebee, #fff);">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ffcdd2; padding-bottom:6px; margin-bottom:6px;">
             <h3 style="margin:0; color:#c62828; font-size:15px;">🔥 کُل فارم اخراجات (Grand Total)</h3>
@@ -382,6 +383,9 @@
         <button class="btn" style="background:#2e7d32; margin-top:8px;" onclick="openLockSetupModal()">
             🔐 پاسورڈ / پن لاک سیٹنگز
         </button>
+        <button class="btn" style="background:#0288d1; margin-top:8px;" onclick="checkForAppUpdates(true)">
+            🔄 اپڈیٹ چیک کریں
+        </button>
     </div>
 
     <div class="card">
@@ -435,6 +439,20 @@
 </nav>
 
 <!-- ==================== تمام ماڈلز (Modals) ==================== -->
+
+<!-- اپڈیٹ نوٹیفیکیشن ماڈل -->
+<div class="modal" id="updateModal">
+    <div class="modal-content" style="max-width: 340px; text-align: center;">
+        <div class="modal-header">
+            <h3 style="color: #1b5e20; margin: 0; font-size: 15px;">🚀 نئی اپڈیٹ دستیاب ہے!</h3>
+            <button class="close-btn" onclick="document.getElementById('updateModal').style.display='none'">✕</button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size: 13px;">گٹ ہب پر ایپ کا نیا ورژن موجود ہے۔ کیا آپ اب اپڈیٹ کرنا چاہتے ہیں؟</p>
+            <button class="btn" style="background-color: #2e7d32;" onclick="executeAppUpdate()">ہاں، اپڈیٹ کریں</button>
+        </div>
+    </div>
+</div>
 
 <!-- شیڈ نمبر خود درج کرنے کا ماڈل -->
 <div class="modal" id="customShedModal">
@@ -873,6 +891,42 @@
     let mortalityFeedChartInstance = null;
     let weightChartInstance = null;
 
+    // گٹ ہب سے آٹو اپڈیٹ چیک کرنے کا فنکشن
+    async function checkForAppUpdates(isManual = false) {
+        const githubRawUrl = 'https://raw.githubusercontent.com/AppByWANapps/PFM/refs/heads/main/index.html?v=' + new Date().getTime();
+        try {
+            let response = await fetch(githubRawUrl);
+            if (!response.ok) return;
+            let remoteText = await response.text();
+            
+            // گٹ ہب والی فائل سے ورژن نکالیں
+            let parser = new DOMParser();
+            let remoteDoc = parser.parseFromString(remoteText, 'text/html');
+            let remoteMeta = remoteDoc.querySelector('meta[name="app-version"]');
+            let localMeta = document.querySelector('meta[name="app-version"]');
+            
+            if (remoteMeta && localMeta) {
+                let remoteVersion = remoteMeta.getAttribute('content');
+                let localVersion = localMeta.getAttribute('content');
+                
+                if (remoteVersion !== localVersion) {
+                    document.getElementById('updateModal').style.display = 'flex';
+                } else if (isManual) {
+                    alert('آپ کی ایپ پہلے سے تازہ ترین ورژن (' + localVersion + ') پر ہے!');
+                }
+            } else if (isManual) {
+                alert('ورژن چیک مکمل ہو گیا!');
+            }
+        } catch (error) {
+            if (isManual) alert('انٹرنیٹ کنکشن کا مسئلہ ہے، اپڈیٹ چیک نہیں ہو سکی۔');
+        }
+    }
+
+    function executeAppUpdate() {
+        // پوری ایپ کو گٹ ہب والے نئے لنک سے ریفریش/ری لوڈ کر دیں
+        window.location.href = 'https://raw.githubusercontent.com/AppByWANapps/PFM/refs/heads/main/index.html?update=' + new Date().getTime();
+    }
+
     function switchTab(screenId, title, element) {
         document.querySelectorAll('.app-screen').forEach(s => s.classList.remove('active-screen'));
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -895,11 +949,11 @@
         if (isDarkMode) {
             body.classList.add('dark-mode');
             if(icon) icon.innerText = '☀️';
-            if(text) text.innerText = 'لائٹ موڈ آن کریں';
+            if(text) icon ? text.innerText = 'لائٹ موڈ آن کریں' : '';
         } else {
             body.classList.remove('dark-mode');
             if(icon) icon.innerText = '🌙';
-            if(text) text.innerText = 'ڈارک موڈ آن کریں';
+            if(text) icon ? text.innerText = 'ڈارک موڈ آن کریں' : '';
         }
     }
 
@@ -974,6 +1028,9 @@
         updateFlockBanner();
         renderSheds();
         loadEditFormValues();
+        
+        // ایپ کھلتے ہی آٹو اپڈیٹ چیک کریں (پس منظر میں)
+        setTimeout(() => { checkForAppUpdates(false); }, 3000);
     }
 
     function saveData() {
@@ -1050,10 +1107,9 @@
         initAvgData();
         flockInfo = { farmName, flockNo, feedName, totalChicks };
         saveData(); updateFlockBanner(); closeNewFlockModal(); renderSheds(); loadEditFormValues();
-        alert("نیا فلاک شروع ہو گیا اور پرانا آرکائیو میں محفوظ کر دیا گیا!");
+        alert("نیا فلاک شروع ہو گیا اور پرانا آرکائیو میں محفوظ कर دیا گیا!");
     }
 
-    // اب یوزر خود شیڈ کا نام یا نمبر درج کرے گا
     function promptOpenNewShed() {
         let nextNum = sheds.length + 1;
         document.getElementById('customShedNameInput').value = `Shed ${nextNum}`;
