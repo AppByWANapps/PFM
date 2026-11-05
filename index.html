@@ -1,0 +1,1798 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Poultry Farm Manager - WANapps</title>
+    <!-- Chart.js لائبریری -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&display=swap');
+
+        * { box-sizing: border-box; transition: background-color 0.25s, color 0.25s; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', 'Urdu Typesetting', sans-serif;
+            background-color: #f4f7f4;
+            margin: 0;
+            padding: 0 0 75px 0;
+            color: #222;
+            direction: rtl;
+            line-height: 2.3;
+            user-select: none;
+        }
+
+        body.dark-mode {
+            background-color: #0d120e;
+            color: #e8ede9;
+        }
+        body.dark-mode header, body.dark-mode .bottom-nav {
+            background-color: #123816;
+            border-color: #2e7d32;
+        }
+        body.dark-mode .nav-item { color: transparent; }
+        body.dark-mode .nav-item span.icon { color: #a5d6a7; }
+        body.dark-mode .nav-item.active { color: #ffffff !important; background: #2e7d32; }
+        body.dark-mode .nav-item.active span.icon { color: #ffffff; }
+
+        body.dark-mode .app-screen { background-color: #0d120e; }
+        body.dark-mode .card, body.dark-mode .stat-box, body.dark-mode .modal-content {
+            background-color: #161c18 !important;
+            color: #e8ede9 !important;
+            border-color: #2a3a2e !important;
+        }
+        body.dark-mode input, body.dark-mode select, body.dark-mode textarea {
+            background-color: #222c25; color: #fff; border-color: #3d5642;
+        }
+        body.dark-mode input.filled-input {
+            background-color: #1e3d24 !important;
+            border-color: #81c784 !important;
+            color: #c8e6c9 !important;
+        }
+        body.dark-mode th { background-color: #202b23 !important; color: #81c784 !important; }
+        body.dark-mode td { border-color: #2a3a2e !important; color: #e0e0e0; }
+
+        header {
+            background-color: #1b5e20;
+            color: white;
+            padding: 10px 15px;
+            position: sticky;
+            top: 0;
+            z-index: 900;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            border-bottom: 2px solid #81c784;
+        }
+        .header-title-main { font-size: 16px; font-weight: bold; color: #ffffff; margin: 0; font-family: sans-serif; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+        .header-screen-title { font-size: 14px; color: #c8e6c9; margin: 0; font-weight: bold; }
+
+        .app-screen {
+            display: none;
+            padding: 12px;
+            max-width: 600px;
+            margin: 0 auto;
+            animation: fadeIn 0.2s ease-in-out;
+        }
+        .app-screen.active-screen { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            height: 62px;
+            background-color: #ffffff;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid #c8e6c9;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+            z-index: 1000;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            flex: 1; height: 100%; color: transparent; font-size: 0px; cursor: pointer; text-decoration: none; padding: 4px 0;
+        }
+        .nav-item span.icon { font-size: 20px; line-height: 1; margin-bottom: 2px; color: #388e3c; display: block; }
+        .nav-item.active { 
+            color: #FFFFFF !important; 
+            font-size: 11px !important; 
+            font-weight: bold; 
+            background: #2e7d32; 
+            border-radius: 8px; 
+            margin: 4px; 
+            box-shadow: 0 2px 5px rgba(46,125,50,0.3); 
+        }
+        .nav-item.active span.icon { color: #ffffff !important; }
+
+        .card {
+            background: white; border-radius: 12px; padding: 14px; margin-bottom: 12px;
+            box-shadow: 0 3px 10px rgba(27,94,32,0.06); border: 1px solid #c8e6c9;
+        }
+        .flock-banner {
+            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+            border: 1px solid #81c784; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
+
+        .stat-box {
+            background: #f1f8e9; border: 1px solid #c8e6c9; border-radius: 8px; padding: 6px 2px; text-align: center;
+        }
+        .stat-box span { display: block; font-size: 10px; color: #2e7d32; font-weight: bold; }
+        .stat-box strong { font-size: 13px; color: #1b5e20; }
+
+        .btn {
+            background-color: #2e7d32; color: white; border: none; padding: 9px 14px; border-radius: 6px;
+            cursor: pointer; font-size: 14px; width: 100%; margin-top: 6px; font-family: inherit; font-weight: bold;
+            box-shadow: 0 2px 5px rgba(46,125,50,0.2);
+        }
+        .share-btn { background-color: #0277bd; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; font-family: inherit; font-weight: bold; }
+        .reset-btn { background-color: #c62828; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; font-family: inherit; font-weight: bold; }
+        .delete-btn { background-color: #ffebee; color: #c62828; border: 1px solid #ffcdd2; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; font-family: inherit; font-weight: bold; }
+
+        .shed-card {
+            background: white; padding: 12px 15px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            display: flex; justify-content: space-between; align-items: center; cursor: pointer; border-right: 5px solid #2e7d32; margin-bottom: 8px; border: 1px solid #c8e6c9;
+        }
+
+        .shed-tab-btn {
+            padding: 6px 12px; border: 1px solid #c2185b; background: white; color: #c2185b; border-radius: 4px; cursor: pointer; font-size: 12px; position: relative; font-family: inherit; font-weight: bold;
+        }
+        body.dark-mode .shed-tab-btn { background: #202b23; color: #ff80ab; border-color: #ad1457; }
+        .shed-tab-btn.active { background: #c2185b; color: white; }
+        .shed-tab-btn.has-data::after { content: '•'; color: #00c853; font-size: 18px; position: absolute; top: -5px; left: 3px; }
+
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); justify-content: center; align-items: center; padding: 10px; z-index: 2000;
+        }
+        .modal-content {
+            background: white; width: 100%; max-width: 580px; border-radius: 12px;
+            display: flex; flex-direction: column; max-height: 90vh; overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .modal-header { padding: 12px 16px; background: #e8f5e9; border-bottom: 1px solid #c8e6c9; display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 14px; overflow-y: auto; flex-grow: 1; }
+        .close-btn { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; padding: 5px 12px; border-radius: 5px; cursor: pointer; font-size: 13px; font-family: inherit; font-weight: bold; }
+
+        input, select, textarea {
+            width: 100%; padding: 8px; margin: 4px 0; border: 1px solid #a5d6a7; border-radius: 5px;
+            direction: rtl; text-align: right; font-family: inherit; font-size: 14px; background: #fafafa;
+        }
+        input[type="number"], input[type="date"], input[type="password"] { direction: ltr; text-align: right; }
+        input.filled-input { background-color: #e8f5e9 !important; border: 2px solid #2e7d32 !important; font-weight: bold !important; color: #1b5e20 !important; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12px; table-layout: fixed; }
+        th, td { border: 1px solid #c8e6c9; padding: 5px; text-align: center; word-wrap: break-word; }
+        th { background: #e8f5e9; color: #1b5e20; font-weight: bold; }
+
+        @media print {
+            body * { visibility: hidden; }
+            .print-container, .print-container * { visibility: visible; }
+            .print-container { position: absolute; left: 0; top: 0; width: 100%; display: block !important; }
+            .no-print { display: none !important; }
+            @page { size: A4; margin: 10mm; }
+        }
+        .print-container { display: none; }
+    </style>
+</head>
+<body id="mainBody">
+
+<!-- ایپ لاک سکرین -->
+<div id="lockScreenModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #123816; z-index: 9999; justify-content: center; align-items: center; color: white; flex-direction: column; padding: 20px;">
+    <div style="background: #1b5e20; padding: 25px; border-radius: 12px; text-align: center; max-width: 350px; width: 100%; border: 2px solid #81c784; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+        <h2 style="margin-top:0; color:#c8e6c9;">🔒 ایپ لاک ہے</h2>
+        <p style="font-size: 13px; color:#a5d6a7;">براہ کرم اپنا 4 ہندسوں کا خفیہ پن (PIN) درج کریں:</p>
+        <input type="password" id="unlockPinInput" placeholder="****" maxlength="4" style="text-align: center; font-size: 22px; letter-spacing: 6px; margin-bottom: 12px;">
+        <button class="btn" style="background-color: #2e7d32;" onclick="verifyUnlockPin()">انلاک کریں</button>
+        <p id="unlockErrorMsg" style="color: #ff80ab; font-size: 12px; margin-top: 8px; display: none; font-weight: bold;">غلط پن کوڈ!</p>
+    </div>
+</div>
+
+<header class="no-print">
+    <div class="header-title-main">Poultry Farm Manager</div>
+    <div class="header-screen-title" id="screenHeaderTitle">🏠 فارم ڈیش بورڈ</div>
+</header>
+
+<!-- ==================== اسکرین 1: ہوم / ڈیش بورڈ ==================== -->
+<div class="app-screen active-screen no-print" id="screen-home">
+    <div class="flock-banner">
+        <div class="grid-2" style="font-size: 12px; color: #1b5e20;">
+            <div>🏛️ فارم: <strong id="bannerFarmName">-</strong></div>
+            <div>📋 فلاک: <strong id="bannerFlockNo">-</strong></div>
+            <div>🌾 فیڈ: <strong id="bannerFeedName">-</strong></div>
+            <div>🐣 چوزے: <strong id="bannerTotalChicks">0</strong></div>
+        </div>
+    </div>
+
+    <div class="card" style="border: 2px solid #81c784; background: linear-gradient(135deg, #f1f8e9, #ffffff);">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #c8e6c9; padding-bottom:6px; margin-bottom:8px;">
+            <h3 style="margin:0; color:#1b5e20; font-size:16px;">📊 فارم خلاصہ</h3>
+            <button class="share-btn" onclick="openMasterSharePrompt()">📲 رپورٹ شیئر</button>
+        </div>
+        <div class="grid-2">
+            <div class="stat-box"><span>ابتدائی پرندے</span><strong id="m-initial">0</strong></div>
+            <div class="stat-box"><span>اموات (<span id="m-mortality-pct" style="color:#c62828;">0%</span>)</span><strong id="m-mortality" style="color: #c62828;">0</strong></div>
+            <div class="stat-box"><span>موجودہ زندہ</span><strong id="m-current">0</strong></div>
+            <div class="stat-box"><span>کل فیڈ کھپت</span><strong id="m-feed">0 بوری</strong></div>
+            <div class="stat-box"><span>اوسط وزن</span><strong id="m-weight">0 g</strong></div>
+            <div class="stat-box"><span>مجموعی FCR</span><strong id="m-fcr" style="color: #0277bd;">0.00</strong></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3 style="margin:0 0 8px 0; color:#3f51b5; font-size:15px;">📈 فلاک کارکردگی گراف</h3>
+        <button class="btn" style="background:#3f51b5;" onclick="openChartModal()">گراف دیکھیں</button>
+    </div>
+
+    <div class="card">
+        <h3 style="margin:0 0 8px 0; color:#6a1b9a; font-size:15px;">🏆 فائنل رپورٹ و پرنٹ</h3>
+        <button class="btn" style="background:#6a1b9a;" onclick="printFullReport()">🖨️ فائنل PDF / پرنٹ تیار کریں</button>
+    </div>
+</div>
+
+<!-- ==================== اسکرین 2: شیڈز اور رجسٹرز ==================== -->
+<div class="app-screen no-print" id="screen-sheds">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+        <h3 style="margin:0; color:#1b5e20;">🐔 شیڈز</h3>
+        <button class="share-btn" style="background:#1b5e20; padding: 4px 10px;" onclick="promptOpenNewShed()">✏️ نئی شیڈ اضافہ کریں </button>
+    </div>
+    <div id="shedListContainer"></div>
+
+    <div class="card" style="margin-top: 15px;">
+        <h3 style="margin:0 0 8px 0; color:#00695c; font-size:15px;">💉 ویکسینیشن و میڈیسن</h3>
+        <button class="btn" style="background:#00695c;" onclick="openMedModal()">میڈیسن رجسٹر کھولیں</button>
+    </div>
+
+    <div class="card">
+        <h3 style="margin:0 0 8px 0; color:#c2185b; font-size:15px;">⚖️ 10-ہفتہ اوسط وزن کیلکولیٹر</h3>
+        <button class="btn" style="background:#c2185b;" onclick="openAvgModal()">وزن ایوریج کیلکولیٹر</button>
+    </div>
+
+    <div class="card">
+        <h3 style="margin:0 0 8px 0; color:#ad1457; font-size:15px;">🐓 منڈا / لنگڑے مرغیاں</h3>
+        <button class="btn" style="background:#ad1457;" onclick="openMundaModal()">منڈا رجسٹر کھولیں</button>
+    </div>
+</div>
+
+<!-- ==================== اسکرین 3: کیش بک و حسابات (خرچہ) ==================== -->
+<div class="app-screen no-print" id="screen-finance">
+    <!-- گرانڈ ٹوٹل اخراجات کا کارڈ -->
+    <div class="card" style="border: 2px solid #c62828; background: linear-gradient(135deg, #ffebee, #fff);">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ffcdd2; padding-bottom:6px; margin-bottom:6px;">
+            <h3 style="margin:0; color:#c62828; font-size:15px;">🔥 کُل فارم اخراجات (Grand Total)</h3>
+        </div>
+        <div style="text-align: center; padding: 4px 0;">
+            <strong id="grandTotalExpenseDisplay" style="font-size: 20px; color: #b71c1c;">Rs. 0</strong>
+            <span style="display: block; font-size: 11px; color: #666;">(عام خرچ + منشی + فیول + جمعدار ادائگی)</span>
+        </div>
+    </div>
+
+    <div class="card" style="border: 1px solid #0277bd;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #b3e5fc; padding-bottom:6px; margin-bottom:8px;">
+            <h3 style="margin:0; color:#0277bd; font-size:16px;">💵 کیش بک (عام فارم خرچ و آمدن)</h3>
+            <button class="share-btn" style="background:#0277bd;" onclick="shareCashBook()">📲 شیئر</button>
+        </div>
+        <div class="grid-2" style="margin-bottom:8px;">
+            <div style="background:#ffebee; padding:8px; border-radius:6px; text-align:center;">
+                <span style="font-size:11px; color:#c62828; font-weight:bold;">عام فارم اخراجات</span>
+                <strong id="totalExpensesDisplay" style="display:block; color:#c62828; font-size:14px;">Rs. 0</strong>
+            </div>
+            <div style="background:#e8f5e9; padding:8px; border-radius:6px; text-align:center;">
+                <span style="font-size:11px; color:#2e7d32; font-weight:bold;">کل آمدن/وصولی</span>
+                <strong id="totalIncomeDisplay" style="display:block; color:#2e7d32; font-size:14px;">Rs. 0</strong>
+            </div>
+        </div>
+        <button class="btn" style="background:#0277bd;" onclick="openCashModal()">عام کیش بک کھولیں</button>
+    </div>
+
+    <div class="card" style="border: 1px solid #e65100;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ffe0b2; padding-bottom:6px; margin-bottom:8px;">
+            <h3 style="margin:0; color:#e65100; font-size:16px;">👨‍💼 منشی / مینیجر خرچہ</h3>
+            <button class="share-btn" style="background:#e65100;" onclick="shareManagerRegister()">📲 شیئر</button>
+        </div>
+        <div style="background:#fff3e0; padding:8px; border-radius:6px; text-align:center; margin-bottom:8px;">
+            <span style="font-size:11px; color:#e65100; font-weight:bold;">کل منشی خرچ</span>
+            <strong id="totalManagerDisplay" style="display:block; color:#e65100; font-size:15px;">Rs. 0</strong>
+        </div>
+        <button class="btn" style="background:#e65100;" onclick="openManagerModal()">منشی خرچہ رجسٹر کھولیں</button>
+    </div>
+
+    <div class="card" style="border: 1px solid #455a64;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #cfd8dc; padding-bottom:6px; margin-bottom:8px;">
+            <h3 style="margin:0; color:#455a64; font-size:16px;">⛽ ڈیزل اور پیٹرول (فیول خرچ)</h3>
+            <button class="share-btn" style="background:#455a64;" onclick="shareFuelRegister()">📲 شیئر</button>
+        </div>
+        <div style="background:#eceff1; padding:8px; border-radius:6px; text-align:center; margin-bottom:8px;">
+            <span style="font-size:11px; color:#37474f; font-weight:bold;">کل فیول خرچ</span>
+            <strong id="totalFuelCostDisplay" style="display:block; color:#455a64; font-size:15px;">Rs. 0</strong>
+        </div>
+        <button class="btn" style="background:#455a64;" onclick="openFuelModal()">فیول رجسٹر کھولیں</button>
+    </div>
+
+    <div class="card" style="border: 1px solid #558b2f;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #dcedc8; padding-bottom:6px; margin-bottom:8px;">
+            <h3 style="margin:0; color:#558b2f; font-size:16px;">👷 جمعدار / لیبر رجسٹر</h3>
+            <button class="share-btn" style="background:#558b2f;" onclick="shareLaborRegister()">📲 شیئر</button>
+        </div>
+        <div class="grid-2" style="margin-bottom:8px;">
+            <div style="background:#f1f8e9; padding:6px; border-radius:6px; text-align:center;"><span style="font-size:10px; font-weight:bold;">جمعدار کا ٹائم</span><strong id="totalJamadarDaysDisplay" style="display:block; color:#1b5e20;">0 دن</strong></div>
+            <div style="background:#ffebee; padding:6px; border-radius:6px; text-align:center;"><span style="font-size:10px; font-weight:bold;">دی گئی رقم</span><strong id="totalJamadarPaidDisplay" style="display:block; color:#b71c1c;">Rs. 0</strong></div>
+        </div>
+        <button class="btn" style="background:#558b2f;" onclick="openLaborModal()">جمعدار رجسٹر کھولیں</button>
+    </div>
+</div>
+
+<!-- ==================== اسکرین 4: اسٹاک و گاڑی سلپس (فیڈ) ==================== -->
+<div class="app-screen no-print" id="screen-stock">
+    <div class="card" style="border: 1px solid #ef6c00;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ffe0b2; padding-bottom:6px; margin-bottom:8px;">
+            <h3 style="margin:0; color:#ef6c00; font-size:16px;">🌾 فیڈ اسٹاک (آمد و روانگی)</h3>
+            <button class="share-btn" style="background:#ef6c00;" onclick="shareFeedStock()">📲 شیئر</button>
+        </div>
+        <div class="grid-5" style="margin-bottom:8px; text-align:center;">
+            <div class="stat-box" style="background:#fff3e0;"><span>کمپنی فیڈ</span><strong id="totalCompanyFeedDisplay" style="color:#e65100;">0 بوری</strong></div>
+            <div class="stat-box" style="background:#f3e5f5;"><span>دوسرے فارم</span><strong id="totalOtherFeedDisplay" style="color:#6a1b9a;">0 بوری</strong></div>
+            <div class="stat-box" style="background:#ffebee;"><span>روانگی فیڈ</span><strong id="totalFeedOutExtDisplay" style="color:#c62828;">0 بوری</strong></div>
+            <div class="stat-box" style="background:#e3f2fd;"><span>ٹوٹل خوراک</span><strong id="totalFeedConsumedDisplay" style="color:#0277bd;">0 بوری</strong></div>
+            <div class="stat-box" style="background:#e8f5e9;"><span>باقی اسٹاک</span><strong id="feedStockBalance" style="color:#1b5e20;">0 بوری</strong></div>
+        </div>
+        <button class="btn" style="background:#ef6c00;" onclick="openFeedStockModal()">فیڈ اسٹاک رجسٹر کھولیں</button>
+    </div>
+
+    <div class="card" style="border: 1px solid #00838f;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #80deea; padding-bottom:6px; margin-bottom:8px;">
+            <h3 style="margin:0; color:#00838f; font-size:16px;">⚖️ کانٹے کی پرچیاں (وزن سلپس)</h3>
+            <span style="font-size: 12px; color: #006064; font-weight: bold;" id="slipCountDisplay">کل: 0</span>
+        </div>
+        <button class="btn" style="background:#00838f;" onclick="openSlipModal()">پرچی رجسٹر کھولیں</button>
+    </div>
+</div>
+
+<!-- ==================== اسکرین 5: سیٹنگز و مینو ==================== -->
+<div class="app-screen no-print" id="screen-settings">
+    <div class="card" style="border: 2px solid #2e7d32; background: #f1f8e9;">
+        <h3 style="margin:0 0 6px 0; color:#1b5e20; font-size:15px;">✏️ فارم اور فلاک کی معلومات درست کریں (Edit)</h3>
+        <label style="font-size:11px; font-weight:bold;">فارم کا نام:</label>
+        <input type="text" id="editFarmName" placeholder="فارم کا نام">
+        <label style="font-size:11px; font-weight:bold;">فلاک نمبر:</label>
+        <input type="text" id="editFlockNo" placeholder="فلاک نمبر">
+        <label style="font-size:11px; font-weight:bold;">فیڈ کا نام:</label>
+        <input type="text" id="editFeedName" placeholder="فیڈ کا نام">
+        <label style="font-size:11px; font-weight:bold;">کل چوزے:</label>
+        <input type="number" id="editTotalChicks" placeholder="کل چوزے">
+        <button class="btn" style="margin-top:8px; background:#2e7d32;" onclick="updateFarmDetailsInfo()">تبدیلیاں محفوظ کریں</button>
+    </div>
+
+    <div class="card">
+        <h3 style="margin:0 0 8px 0; color:#1b5e20;">⚙️ ایپ ترجیحات و سکیورٹی</h3>
+        <button class="btn" style="background:#37474f;" onclick="toggleDarkMode()">
+            <span id="darkModeIcon">🌙</span> <span id="darkModeText">ڈارک موڈ تبدیل کریں</span>
+        </button>
+        <button class="btn" style="background:#2e7d32; margin-top:8px;" onclick="openLockSetupModal()">
+            🔐 پاسورڈ / پن لاک سیٹنگز
+        </button>
+    </div>
+
+    <div class="card">
+        <h3 style="margin:0 0 8px 0; color:#0277bd;">💾 ڈیٹا بیک اپ و بحالی</h3>
+        <button class="btn" style="background:#0277bd;" onclick="exportAllAppData()">
+            📤 سارا ڈیٹا ایکسپورٹ کریں (Backup JSON)
+        </button>
+        <button class="btn" style="background:#00838f; margin-top:8px;" onclick="document.getElementById('masterImportFile').click();">
+            📥 ڈیٹا امپورٹ کریں (Restore JSON)
+        </button>
+        <input type="file" id="masterImportFile" accept=".json" style="display: none;" onchange="importAllAppData(event)">
+    </div>
+
+    <div class="card">
+        <h3 style="margin:0 0 8px 0; color:#c62828;">🔄 فلاک مینجمنٹ</h3>
+        <button class="btn" style="background:#c62828;" onclick="openNewFlockSetupModal()">
+            🔄 نیا فلاک شروع کریں (آرکائیو سمیت)
+        </button>
+        <button class="btn" style="background:#455a64; margin-top:8px;" onclick="openArchiveModal()">
+            📂 پرانے فلاک ریکارڈز (Archive)
+        </button>
+    </div>
+
+    <div style="text-align: center; font-size: 11px; color: #555; margin-top: 15px;">
+        <b>WANapps</b> — Forward to Digital<br>by Abubakar Kalmati Baloch ©2026<br>wanapps.wan@gmail.com
+    </div>
+</div>
+
+<!-- ==================== باٹم نیویگیشن بار ==================== -->
+<nav class="bottom-nav no-print">
+    <div class="nav-item active" onclick="switchTab('screen-home', '🏠 فارم ڈیش بورڈ', this)">
+        <span class="icon">🏠</span>
+        <span>ڈیش بورڈ</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('screen-sheds', '🐔 شیڈز', this)">
+        <span class="icon">🐔</span>
+        <span>شیڈز</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('screen-finance', '💵 کیش بک و حسابات', this)">
+        <span class="icon">💵</span>
+        <span>خرچہ</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('screen-stock', '🌾 فیڈ و اسٹاک', this)">
+        <span class="icon">🌾</span>
+        <span>فیڈ</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('screen-settings', '⚙️ سیٹنگز و مینو', this)">
+        <span class="icon">⚙️</span>
+        <span>مینو</span>
+    </div>
+</nav>
+
+<!-- ==================== تمام ماڈلز (Modals) ==================== -->
+
+<!-- شیڈ نمبر خود درج کرنے کا ماڈل -->
+<div class="modal" id="customShedModal">
+    <div class="modal-content" style="max-width: 320px;">
+        <div class="modal-header">
+            <h3 style="color: #1b5e20; margin: 0; font-size: 15px;">➕ نیا شیڈ شامل کریں</h3>
+            <button class="close-btn" onclick="closeCustomShedModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <label style="font-size:12px; font-weight:bold;">شیڈ کا نام یا نمبر درج کریں:</label>
+            <input type="text" id="customShedNameInput" placeholder="مثلاً: Shed 1 یا شیڈ نمبر 1">
+            <button class="btn" style="margin-top:10px;" onclick="saveCustomShed()">شیڈ شامل کریں</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="masterShareModal">
+    <div class="modal-content" style="max-width: 340px;">
+        <div class="modal-header">
+            <h3 style="color: #1b5e20; margin: 0; font-size: 15px;">📲 دن کی رپورٹ شیئر کریں</h3>
+            <button class="close-btn" onclick="closeMasterShareModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <label style="font-size:12px; font-weight:bold;">فلاک کا دن نمبر درج کریں:</label>
+            <input type="number" id="reportDayInput" placeholder="مثلاً: 12">
+            <button class="btn" onclick="shareMasterReportWithDay()">واٹس ایپ پر بھیجیں</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="lockSetupModal">
+    <div class="modal-content" style="max-width: 340px;">
+        <div class="modal-header">
+            <h3 style="color: #1b5e20; margin: 0; font-size: 15px;">🔐 پن پاسورڈ سیٹنگ</h3>
+            <button class="close-btn" onclick="closeLockSetupModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <label style="font-size:12px; font-weight:bold;">4 ہندسوں کا پن (PIN) درج کریں:</label>
+            <input type="password" id="newPinInput" placeholder="****" maxlength="4">
+            <button class="btn" onclick="saveNewPin()">لاک محفوظ کریں</button>
+            <button class="reset-btn" style="width:100%; margin-top:6px;" onclick="removePinLock()">لاک ختم کریں</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="newFlockModal">
+    <div class="modal-content" style="max-width: 380px;">
+        <div class="modal-header">
+            <h3 style="color: #1b5e20; margin: 0; font-size: 15px;">🐣 نیا فلاک سیٹ اپ</h3>
+            <button class="close-btn" onclick="closeNewFlockModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <label style="font-size:12px; font-weight:bold;">فارم کا نام:</label>
+            <input type="text" id="setupFarmName" placeholder="المکہ پولٹری فارم">
+            <label style="font-size:12px; font-weight:bold;">فلاک نمبر:</label>
+            <input type="text" id="setupFlockNo" placeholder="بیچ 04">
+            <label style="font-size:12px; font-weight:bold;">فیڈ کا نام:</label>
+            <input type="text" id="setupFeedName" placeholder="گولڈن فیڈ">
+            <label style="font-size:12px; font-weight:bold;">کل چوزے:</label>
+            <input type="number" id="setupTotalChicks" placeholder="10000">
+            <button class="btn" style="margin-top:10px;" onclick="saveNewFlockSetup()">نیا فلاک شروع کریں</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="archiveModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 style="color: #1b5e20; margin: 0; font-size: 15px;">📂 پرانے فلاک ریکارڈز</h3>
+            <button class="close-btn" onclick="closeArchiveModal()">✕</button>
+        </div>
+        <div class="modal-body" id="archiveListContainer"></div>
+    </div>
+</div>
+
+<div class="modal" id="shedModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitle" style="color: #1b5e20; margin: 0; font-size: 15px;">شیڈ تفصیل</h3>
+            <button class="close-btn" onclick="closeModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <input type="number" id="initialBirdsInput" placeholder="ابتدائی پرندے" onchange="updateInitialBirds(this.value)">
+            <div id="shedSummary" style="background:#e8f5e9; padding:6px; border-radius:6px; margin:6px 0; font-size:12px; font-weight:bold; color:#1b5e20;"></div>
+            <div class="grid-2">
+                <input type="number" id="dayInput" placeholder="دن">
+                <input type="number" step="0.5" id="feedBagsInput" placeholder="فیڈ بوریاں">
+                <input type="number" id="mortalityInput" placeholder="اموات">
+                <input type="number" step="0.1" id="weightInput" placeholder="وزن (گرام)">
+            </div>
+            <button class="btn" onclick="addRecord()">انٹری محفوظ کریں</button>
+            <table><thead><tr><th>دن</th><th>فیڈ</th><th>اموات</th><th>وزن</th><th>حذف</th></tr></thead><tbody id="recordsTableBody"></tbody></table>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="chartModal">
+    <div class="modal-content" style="max-width: 620px;">
+        <div class="modal-header">
+            <h3 style="color: #3f51b5; margin: 0; font-size: 15px;">📈 فلاک کارکردگی گراف (Analytics)</h3>
+            <button class="close-btn" onclick="closeChartModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <div style="margin-bottom: 20px;">
+                <h4 style="font-size:13px; color:#3f51b5; text-align:center; margin:0 0 6px 0; font-weight:bold;">اموات اور فیڈ کھپت کا رجحان</h4>
+                <div style="height:220px;"><canvas id="mortalityFeedChart"></canvas></div>
+            </div>
+            <div>
+                <h4 style="font-size:13px; color:#c2185b; text-align:center; margin:0 0 6px 0; font-weight:bold;">وزن میں اضافے کی رفتار (گرام)</h4>
+                <div style="height:220px;"><canvas id="weightChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="cashModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 style="color: #0277bd; margin: 0; font-size: 15px;">💵 کیش بک رجسٹر (عام خرچ و آمدن)</h3>
+            <button class="close-btn" onclick="closeCashModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <h4 style="color:#c62828; margin:4px 0;">➕ نیا عام فارم خرچہ</h4>
+            <input type="text" id="expenseDate" placeholder="تاریخ/دن">
+            <input type="text" id="expenseDesc" placeholder="تفصیل">
+            <input type="number" id="expenseAmount" placeholder="رقم روپے">
+            <button class="btn" style="background:#c62828;" onclick="addExpense()">خرچہ درج کریں</button>
+            
+            <h4 style="color:#2e7d32; margin:14px 0 4px 0;">➕ نئی آمدن / وصولی</h4>
+            <input type="text" id="incomeDate" placeholder="تاریخ/دن">
+            <input type="text" id="incomeDesc" placeholder="تفصیل">
+            <input type="number" id="incomeAmount" placeholder="رقم روپے">
+            <button class="btn" onclick="addIncome()">وصولی درج کریں</button>
+            
+            <h4 style="margin:14px 0 4px 0;">عام اخراجات کی لسٹ</h4>
+            <table><thead><tr><th>تاریخ</th><th>تفصیل</th><th>رقم</th><th>حذف</th></tr></thead><tbody id="expenseTableBody"></tbody></table>
+            
+            <h4 style="margin:14px 0 4px 0;">وصولیوں کی لسٹ</h4>
+            <table><thead><tr><th>تاریخ</th><th>تفصیل</th><th>رقم</th><th>حذف</th></tr></thead><tbody id="incomeTableBody"></tbody></table>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="managerModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 style="color: #e65100; margin: 0; font-size: 15px;">👨‍💼 منشی / مینیجر خرچہ رجسٹر</h3>
+            <button class="close-btn" onclick="closeManagerModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <input type="text" id="managerNameInput" placeholder="منشی کا نام (مثلاً: علی منشی)">
+            <input type="text" id="managerDateInput" placeholder="تاریخ / دن">
+            <input type="text" id="managerDescInput" placeholder="تفصیل / مقصد">
+            <input type="number" id="managerAmountInput" placeholder="رقم روپے">
+            <button class="btn" style="background:#e65100;" onclick="addManagerExpense()">خرچہ محفوظ کریں</button>
+            <table><thead><tr><th>تاریخ</th><th>نام</th><th>تفصیل</th><th>رقم</th><th>حذف</th></tr></thead><tbody id="managerTableBody"></tbody></table>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="feedStockModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 style="color: #ef6c00; margin: 0; font-size: 15px;">🌾 فیڈ اسٹاک رجسٹر (آمد و روانگی)</h3>
+            <button class="close-btn" onclick="closeFeedStockModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <h4 style="color:#ef6c00; margin:4px 0;">📥 فیڈ آمد</h4>
+            <input type="text" id="feedInDate" placeholder="تاریخ">
+            <select id="feedSourceType">
+                <option value="کمپنی کی طرف سے آئی فیڈ">کمپنی کی طرف سے آئی فیڈ</option>
+                <option value="دوسرے فارم سے آئی فیڈ">دوسرے فارم سے آئی فیڈ</option>
+            </select>
+            <input type="text" id="feedNameIn" placeholder="فیڈ کا نام">
+            <input type="text" id="feedNumberIn" placeholder="فیڈ نمبر">
+            <input type="text" id="feedInSource" placeholder="سپلائر / ذریعہ نام">
+            <input type="number" step="0.5" id="feedInBags" placeholder="بوریاں">
+            <button class="btn" style="background:#ef6c00;" onclick="addFeedIn()">آمد درج کریں</button>
+            
+            <h4 style="color:#c62828; margin:14px 0 4px 0;">📤 دوسرے فارم فیڈ روانگی</h4>
+            <input type="text" id="feedOutDate" placeholder="تاریخ">
+            <input type="text" id="feedOutName" placeholder="فیڈ کا نام">
+            <input type="text" id="feedOutNumber" placeholder="فیڈ نمبر">
+            <input type="text" id="feedOutDest" placeholder="کس فارم روانہ کی گئی">
+            <input type="number" step="0.5" id="feedOutBags" placeholder="بوریاں">
+            <button class="btn" style="background:#c62828;" onclick="addFeedOutExternal()">روانگی درج کریں</button>
+
+            <h4 style="margin:14px 0 4px 0;">آمدہ فیڈ لسٹ</h4>
+            <table><thead><tr><th>تاریخ</th><th>قسم</th><th>نام/نمبر</th><th>بوریاں</th><th>حذف</th></tr></thead><tbody id="feedInTableBody"></tbody></table>
+            
+            <h4 style="margin:14px 0 4px 0;">روانگی فیڈ لسٹ</h4>
+            <table><thead><tr><th>تاریخ</th><th>نام/نمبر</th><th>منزل</th><th>بوریاں</th><th>حذف</th></tr></thead><tbody id="feedOutTableBody"></tbody></table>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="fuelModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 style="color: #455a64; margin: 0; font-size: 15px;">⛽ ڈیزل اور پیٹرول رجسٹر</h3>
+            <button class="close-btn" onclick="closeFuelModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <select id="fuelType"><option value="ڈیزل">ڈیزل</option><option value="پیٹرول">پیٹرول</option></select>
+            <input type="text" id="fuelDate" placeholder="تاریخ">
+            <input type="number" step="0.5" id="fuelLiters" placeholder="لٹر">
+            <input type="number" id="fuelCost" placeholder="رقم روپے">
+            <button class="btn" style="background:#455a64;" onclick="addFuel()">محفوظ کریں</button>
+            <table><thead><tr><th>تاریخ</th><th>قسم</th><th>لٹر</th><th>رقم</th><th>حذف</th></tr></thead><tbody id="fuelTableBody"></tbody></table>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="laborModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 style="color: #558b2f; margin: 0; font-size: 15px;">👷 جمعدار رجسٹر</h3>
+            <button class="close-btn" onclick="closeLaborModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <input type="text" id="jamadarName" placeholder="جمعدار کا نام">
+            <label style="font-size:11px; font-weight:bold;">آمد:</label><input type="date" id="jamadarArrival">
+            <label style="font-size:11px; font-weight:bold;">روانگی:</label><input type="date" id="jamadarDeparture">
+            <button class="btn" style="background:#558b2f;" onclick="saveJamadarInfo()">اطلاعات محفوظ کریں</button>
+            
+            <h4 style="margin:12px 0 4px 0;">رقم کی ادائیگی</h4>
+            <input type="text" id="jamadarPayDate" placeholder="تاریخ">
+            <input type="number" id="jamadarPayAmount" placeholder="رقم روپے">
+            <input type="text" id="jamadarPayReason" placeholder="تفصیل / مقصد">
+            <button class="btn" onclick="addJamadarExpense()">ادائیگی درج کریں</button>
+            <div id="jamadarDisplayArea" style="margin-top:10px;"></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="slipModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 style="color: #00838f; margin: 0; font-size: 15px;">⚖️ کانٹے کی پرچیاں (وزن سلپس)</h3>
+            <button class="close-btn" onclick="closeSlipModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <input type="text" id="slipDate" placeholder="تاریخ / گاڑی نمبر">
+            <select id="slipGoodsType">
+                <option value="مرغی (برائلر)">مرغی (برائلر)</option>
+                <option value="فیڈ (خوراک)">فیڈ (خوراک)</option>
+                <option value="لکڑی">لکڑی</option>
+                <option value="برادہ">برادہ</option>
+                <option value="سکریپ / کھاد">سکریپ / کھاد</option>
+                <option value="دیگر مال">دیگر مال</option>
+            </select>
+            <input type="number" step="0.01" id="slipDirectWeight" placeholder="کل وزن (Kg درج کریں)">
+            <label style="font-size:11px; color:#555; font-weight:bold;">پرچی کی تصویر:</label>
+            <input type="file" id="slipImageInput" accept="image/*" capture="environment">
+            <button class="btn" style="background:#00838f;" onclick="addWeightSlip()">پرچی محفوظ کریں</button>
+            <div id="slipCardsContainer" style="margin-top:10px;"></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="imageViewModal">
+    <div class="modal-content" style="max-width: 450px;">
+        <div class="modal-header">
+            <h3 id="imageViewTitle" style="color: #00838f; margin: 0; font-size: 15px;">پرچی کی تصویر</h3>
+            <button class="close-btn" onclick="closeImageViewModal()">✕</button>
+        </div>
+        <div class="modal-body" style="text-align: center;">
+            <img id="enlargedSlipImg" src="" style="max-width: 100%; max-height: 60vh; border-radius: 8px;">
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="medModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 style="color: #00695c; margin: 0; font-size: 15px;">💉 ویکسینیشن و میڈیسن رجسٹر</h3>
+            <button class="close-btn" onclick="closeMedModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <input type="text" id="medDate" placeholder="تاریخ / فلاک کا دن">
+            <input type="text" id="medName" placeholder="دوائی / ویکسین کا نام">
+            <input type="text" id="medPurpose" placeholder="مقصد / بیماری کی روکتھام">
+            <input type="text" id="medDosage" placeholder="مقدار / خوراک">
+            <button class="btn" style="background:#00695c;" onclick="addMedRecord()">ریکارڈ محفوظ کریں</button>
+            <table><thead><tr><th>تاریخ</th><th>نام</th><th>مقصد</th><th>مقدار</th><th>حذف</th></tr></thead><tbody id="medTableBody"></tbody></table>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="mundaModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 style="color: #ad1457; margin: 0; font-size: 15px;">🐓 منڈا / لنگڑے مرغیاں رجسٹر</h3>
+            <button class="close-btn" onclick="closeMundaModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <input type="text" id="mundaDate" placeholder="تاریخ">
+            <input type="text" id="mundaBuyerName" placeholder="لینے والے کا نام">
+            <input type="number" step="0.01" id="mundaWeight" placeholder="کل وزن (Kg)">
+            <input type="number" id="mundaCount" placeholder="مرغیوں کی تعداد (عدد)">
+            <button class="btn" style="background:#ad1457;" onclick="addMundaRecord()">ریکارڈ محفوظ کریں</button>
+            <div id="mundaCardsContainer" style="margin-top:10px;"></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="avgModal">
+    <div class="modal-content" style="max-width: 620px;">
+        <div class="modal-header">
+            <h3 style="color: #c2185b; margin: 0; font-size: 15px;">⚖️ ہفتہ وار ایوریج کیلکولیٹر</h3>
+            <div style="display:flex; gap:6px;">
+                <button class="share-btn" style="background:#c2185b;" onclick="saveAvgData()">محفوظ کریں</button>
+                <button class="close-btn" onclick="closeAvgModal()">✕</button>
+            </div>
+        </div>
+        <div class="modal-body">
+            <div id="shedTabsContainer" style="display:flex; gap:5px; flex-wrap:wrap; margin-bottom:10px;"></div>
+            <div style="background:#fce4ec; padding:8px; border-radius:6px; text-align:center; margin-bottom:10px; border: 1px solid #f8bbd0;">
+                <span id="selectedShedAvgTitle" style="font-size:13px; color:#880e4f; font-weight:bold;">منتخب شیڈ کا اوسط:</span>
+                <strong id="grandAvgDisplay" style="display:block; color:#c2185b; font-size:17px; margin-top:2px;">0 گرام</strong>
+            </div>
+            <button class="share-btn" style="width:100%; padding:7px; margin-bottom:12px; background:#c2185b;" onclick="shareAvgReport()">📲 واٹس ایپ پر شیئر کریں</button>
+            <div id="boxesContainer"></div>
+        </div>
+    </div>
+</div>
+
+<!-- پرنٹ ایبل رپورٹس کنٹینر -->
+<div class="print-container" id="printArea" style="direction: rtl; padding: 15px; font-family: sans-serif; max-width: 100%;">
+    <h2 style="text-align: center; color: #1b5e20; margin-bottom: 2px;">پولٹری فارم ماسٹر - فائنل مکمل رپورٹ</h2>
+    <p style="text-align: center; font-size: 12px; color: #555; margin-top: 0;">WANapps — Forward to Digital</p>
+    <hr style="border: 1px solid #1b5e20; margin-bottom: 10px;">
+    
+    <div style="margin-bottom: 12px; background: #e8f5e9; border: 1px solid #81c784; padding: 8px; border-radius: 6px;">
+        <h4 style="color: #1b5e20; margin: 0 0 6px 0;">📈 فارم اور فلاک کی معلومات</h4>
+        <p style="font-size: 12px; margin: 2px 0;">فارم کا نام: <b id="printFarmName">-</b> | فلاک نمبر: <b id="printFlockNo">-</b> | فیڈ کا نام: <b id="printFeedName">-</b> | کل چوزے: <b id="printTotalChicksPdf">0</b></p>
+    </div>
+
+    <div style="margin-bottom: 12px; background: #ffebee; border: 2px solid #ef5350; padding: 8px; border-radius: 6px;">
+        <h4 style="color: #c62828; margin: 0 0 6px 0; display: flex; justify-content: space-between;">
+            <span>🔥 کُل فارم خرچ (Grand Total Expenses)</span>
+            <span id="pdfGrandTotalExpense" style="font-weight: bold; font-size: 16px;">Rs. 0</span>
+        </h4>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; font-size: 11px; text-align: center; margin-top: 6px;">
+            <div style="background: white; padding: 4px; border-radius: 4px; border: 1px solid #ffcdd2;"><b>عام خرچ:</b><br><span id="pdfFarmExpense">Rs. 0</span></div>
+            <div style="background: white; padding: 4px; border-radius: 4px; border: 1px solid #ffe0b2;"><b>منشی خرچ:</b><br><span id="pdfManagerExpense">Rs. 0</span></div>
+            <div style="background: white; padding: 4px; border-radius: 4px; border: 1px solid #dcedc8;"><b>لیبر/جمعدار:</b><br><span id="pdfJamadarExpense">Rs. 0</span></div>
+            <div style="background: white; padding: 4px; border-radius: 4px; border: 1px solid #cfd8dc;"><b>پیٹرول/ڈیزل:</b><br><span id="pdfFuelExpense">Rs. 0</span></div>
+        </div>
+    </div>
+
+    <div style="margin-bottom: 12px; background: #f1f8e9; border: 1px solid #558b2f; padding: 8px; border-radius: 6px;">
+        <h4 style="color: #558b2f; margin: 0 0 6px 0;">👷 جمعدار / لیبر کی تفصیل</h4>
+        <div id="printJamadarContainer" style="font-size: 11px;"></div>
+    </div>
+
+    <div style="margin-bottom: 12px; background: #e8f5e9; border: 1px solid #81c784; padding: 8px; border-radius: 6px;">
+        <h4 style="color: #1b5e20; margin: 0 0 6px 0;">📈 دیگر خلاصہ و وصولی</h4>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; font-size: 11px; text-align: center;">
+            <div style="background: white; padding: 4px; border-radius: 4px; border: 1px solid #c8e6c9;"><b>کل وصولی:</b><br><span id="pdfTotalIncome" style="color: #2e7d32; font-weight: bold;">Rs. 0</span></div>
+            <div style="background: white; padding: 4px; border-radius: 4px; border: 1px solid #ffe0b2;"><b>آمدہ فیڈ:</b><br><span id="pdfTotalFeedIn" style="color: #ef6c00; font-weight: bold;">0 بوری</span></div>
+            <div style="background: white; padding: 4px; border-radius: 4px; border: 1px solid #80deea;"><b>پرچیوں کا وزن:</b><br><span id="pdfTotalSlipWeight" style="color: #00838f; font-weight: bold;">0 Kg</span></div>
+        </div>
+    </div>
+
+    <div style="margin-bottom: 12px;">
+        <h4 style="color: #1b5e20; border-bottom: 1px solid #c8e6c9; margin:0 0 4px 0;">📊 1. شیڈز کا ماسٹر خلاصہ</h4>
+        <div id="printSummaryBox" style="font-size: 11px; background: #f9f9f9; border: 1px solid #a5d6a7; border-radius: 6px; padding: 6px;"></div>
+    </div>
+
+    <div style="margin-bottom: 12px;">
+        <h4 style="color: #c62828; border-bottom: 1px solid #ffcdd2; margin:0 0 4px 0;">💸 2. کیش بک - عام فارم اخراجات</h4>
+        <table border="1" style="width: 100%; border-collapse: collapse; font-size: 11px;">
+            <thead><tr style="background: #ffebee;"><th>تاریخ / دن</th><th>تفصیل</th><th>رقم (روپے)</th></tr></thead>
+            <tbody id="printExpenseBody"></tbody>
+        </table>
+    </div>
+
+    <div style="margin-bottom: 12px;">
+        <h4 style="color: #e65100; border-bottom: 1px solid #ffe0b2; margin:0 0 4px 0;">👨‍💼 3. منشی / مینیجر وار تفصیل</h4>
+        <table border="1" style="width: 100%; border-collapse: collapse; font-size: 11px;">
+            <thead><tr style="background: #fff3e0;"><th>تاریخ</th><th>مینیجر نام</th><th>تفصیل / مقصد</th><th>رقم (روپے)</th></tr></thead>
+            <tbody id="printManagerBody"></tbody>
+        </table>
+    </div>
+
+    <div style="margin-bottom: 12px;">
+        <h4 style="color: #2e7d32; border-bottom: 1px solid #c8e6c9; margin:0 0 4px 0;">💰 4. کیش بک - وصولی کی تفصیل</h4>
+        <table border="1" style="width: 100%; border-collapse: collapse; font-size: 11px;">
+            <thead><tr style="background: #e8f5e9;"><th>تاریخ / دن</th><th>تفصیل</th><th>وصول شدہ رقم</th></tr></thead>
+            <tbody id="printIncomeBody"></tbody>
+        </table>
+    </div>
+
+    <div style="margin-bottom: 12px;">
+        <h4 style="color: #ef6c00; border-bottom: 1px solid #ffe0b2; margin:0 0 4px 0;">📥 5. فیڈ اسٹاک رجسٹر</h4>
+        <table border="1" style="width: 100%; border-collapse: collapse; font-size: 11px;">
+            <thead><tr style="background: #fff3e0;"><th>تاریخ</th><th>ذریعہ قسم</th><th>نام/نمبر</th><th>سپلائر</th><th>بوریاں</th></tr></thead>
+            <tbody id="printFeedBody"></tbody>
+        </table>
+    </div>
+
+    <div style="margin-bottom: 12px;">
+        <h4 style="color: #455a64; border-bottom: 1px solid #cfd8dc; margin:0 0 4px 0;">⛽ 6. ڈیزل اور پیٹرول</h4>
+        <table border="1" style="width: 100%; border-collapse: collapse; font-size: 11px;">
+            <thead><tr style="background: #eceff1;"><th>تاریخ</th><th>قسم</th><th>لٹر</th><th>رقم (روپے)</th></tr></thead>
+            <tbody id="printFuelBody"></tbody>
+        </table>
+    </div>
+
+    <div style="margin-bottom: 12px;">
+        <h4 style="color: #00838f; border-bottom: 1px solid #80deea; margin:0 0 4px 0;">⚖️ 7. کانٹے کی پرچیاں</h4>
+        <table border="1" style="width: 100%; border-collapse: collapse; font-size: 11px;">
+            <thead><tr style="background: #e0f7fa;"><th>شمار</th><th>تاریخ / گاڑی</th><th>قسم</th><th>وزن (Kg)</th><th>تصویر</th></tr></thead>
+            <tbody id="printSlipBody"></tbody>
+        </table>
+    </div>
+
+    <div style="margin-bottom: 12px;">
+        <h4 style="color: #ad1457; border-bottom: 1px solid #f8bbd0; margin:0 0 4px 0;">🐓 8. منڈا / لنگڑے مرغیاں</h4>
+        <table border="1" style="width: 100%; border-collapse: collapse; font-size: 11px;">
+            <thead><tr style="background: #fce4ec;"><th>شمار</th><th>تاریخ</th><th>لینے والے کا نام</th><th>وزن (Kg)</th><th>تعداد</th></tr></thead>
+            <tbody id="printMundaBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let sheds = [], expenses = [], managerExpenses = [], incomes = [], feedIns = [], feedOutExternals = [], fuels = [], weightSlips = [], mundaRecords = [], medRecords = [], flockArchive = [];
+    let jamadarData = { name: '', arrival: '', departure: '', payments: [] };
+    let flockInfo = { farmName: '', flockNo: '', feedName: '', totalChicks: 0 };
+    let shedAvgBoxesData = {};
+    let currentSelectedAvgShed = 0;
+    let isDarkMode = false;
+    let appPinCode = '';
+    let mortalityFeedChartInstance = null;
+    let weightChartInstance = null;
+
+    function switchTab(screenId, title, element) {
+        document.querySelectorAll('.app-screen').forEach(s => s.classList.remove('active-screen'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active-screen');
+        if(element) element.classList.add('active');
+        document.getElementById('screenHeaderTitle').innerText = title;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if(screenId === 'screen-settings') loadEditFormValues();
+    }
+
+    function toggleDarkMode() {
+        isDarkMode = !isDarkMode;
+        applyDarkMode();
+        localStorage.setItem('poultry_dark_mode', isDarkMode);
+    }
+    function applyDarkMode() {
+        const body = document.getElementById('mainBody');
+        const icon = document.getElementById('darkModeIcon');
+        const text = document.getElementById('darkModeText');
+        if (isDarkMode) {
+            body.classList.add('dark-mode');
+            if(icon) icon.innerText = '☀️';
+            if(text) text.innerText = 'لائٹ موڈ آن کریں';
+        } else {
+            body.classList.remove('dark-mode');
+            if(icon) icon.innerText = '🌙';
+            if(text) text.innerText = 'ڈارک موڈ آن کریں';
+        }
+    }
+
+    function openLockSetupModal() {
+        document.getElementById('newPinInput').value = appPinCode || '';
+        document.getElementById('lockSetupModal').style.display = 'flex';
+    }
+    function closeLockSetupModal() { document.getElementById('lockSetupModal').style.display = 'none'; }
+    function saveNewPin() {
+        let pin = document.getElementById('newPinInput').value;
+        if (!pin || pin.length < 4) return alert('کم از کم 4 ہندسوں کا پن درج کریں!');
+        appPinCode = pin;
+        localStorage.setItem('poultry_app_pin', appPinCode);
+        alert('ایپ لاک فعال ہو گیا ہے!');
+        closeLockSetupModal();
+    }
+    function removePinLock() {
+        appPinCode = ''; localStorage.removeItem('poultry_app_pin');
+        alert('ایپ لاک ختم کر دیا گیا!'); closeLockSetupModal();
+    }
+    function verifyUnlockPin() {
+        let entered = document.getElementById('unlockPinInput').value;
+        if (entered === appPinCode) {
+            document.getElementById('lockScreenModal').style.display = 'none';
+            document.getElementById('unlockPinInput').value = '';
+            document.getElementById('unlockErrorMsg').style.display = 'none';
+        } else {
+            document.getElementById('unlockErrorMsg').style.display = 'block';
+        }
+    }
+
+    function initAvgData() {
+        if (localStorage.getItem('poultry_shed_avg_boxes')) {
+            shedAvgBoxesData = JSON.parse(localStorage.getItem('poultry_shed_avg_boxes'));
+        } else {
+            shedAvgBoxesData = {};
+            for (let s = 0; s < 10; s++) {
+                shedAvgBoxesData[s] = [];
+                for (let b = 0; b < 10; b++) {
+                    let rows = []; for (let r = 0; r < 10; r++) rows.push({ count: '', weight: '' });
+                    shedAvgBoxesData[s].push(rows);
+                }
+            }
+        }
+    }
+
+    function loadData() {
+        if (localStorage.getItem('poultry_sheds_data')) sheds = JSON.parse(localStorage.getItem('poultry_sheds_data'));
+        else { sheds = []; for (let i = 1; i <= 4; i++) sheds.push({ name: `Shed ${i}`, initialBirds: 0, records: [] }); }
+
+        if (localStorage.getItem('poultry_flock_info')) flockInfo = JSON.parse(localStorage.getItem('poultry_flock_info'));
+        else openNewFlockSetupModal();
+
+        if (localStorage.getItem('poultry_expenses_data')) expenses = JSON.parse(localStorage.getItem('poultry_expenses_data'));
+        if (localStorage.getItem('poultry_manager_expenses')) managerExpenses = JSON.parse(localStorage.getItem('poultry_manager_expenses'));
+        if (localStorage.getItem('poultry_incomes_data')) incomes = JSON.parse(localStorage.getItem('poultry_incomes_data'));
+        if (localStorage.getItem('poultry_feedins_data')) feedIns = JSON.parse(localStorage.getItem('poultry_feedins_data'));
+        if (localStorage.getItem('poultry_feedout_ext_data')) feedOutExternals = JSON.parse(localStorage.getItem('poultry_feedout_ext_data'));
+        if (localStorage.getItem('poultry_fuels_data')) fuels = JSON.parse(localStorage.getItem('poultry_fuels_data'));
+        if (localStorage.getItem('poultry_jamadar_data')) jamadarData = JSON.parse(localStorage.getItem('poultry_jamadar_data'));
+        if (localStorage.getItem('poultry_weight_slips')) weightSlips = JSON.parse(localStorage.getItem('poultry_weight_slips'));
+        if (localStorage.getItem('poultry_munda_records')) mundaRecords = JSON.parse(localStorage.getItem('poultry_munda_records'));
+        if (localStorage.getItem('poultry_med_records')) medRecords = JSON.parse(localStorage.getItem('poultry_med_records'));
+        if (localStorage.getItem('poultry_flock_archive')) flockArchive = JSON.parse(localStorage.getItem('poultry_flock_archive'));
+        
+        if (localStorage.getItem('poultry_app_pin')) {
+            appPinCode = localStorage.getItem('poultry_app_pin');
+            document.getElementById('lockScreenModal').style.display = 'flex';
+        }
+        if (localStorage.getItem('poultry_dark_mode') === 'true') { isDarkMode = true; applyDarkMode(); }
+        initAvgData();
+        updateFlockBanner();
+        renderSheds();
+        loadEditFormValues();
+    }
+
+    function saveData() {
+        localStorage.setItem('poultry_sheds_data', JSON.stringify(sheds));
+        localStorage.setItem('poultry_flock_info', JSON.stringify(flockInfo));
+        localStorage.setItem('poultry_expenses_data', JSON.stringify(expenses));
+        localStorage.setItem('poultry_manager_expenses', JSON.stringify(managerExpenses));
+        localStorage.setItem('poultry_incomes_data', JSON.stringify(incomes));
+        localStorage.setItem('poultry_feedins_data', JSON.stringify(feedIns));
+        localStorage.setItem('poultry_feedout_ext_data', JSON.stringify(feedOutExternals));
+        localStorage.setItem('poultry_fuels_data', JSON.stringify(fuels));
+        localStorage.setItem('poultry_jamadar_data', JSON.stringify(jamadarData));
+        localStorage.setItem('poultry_weight_slips', JSON.stringify(weightSlips));
+        localStorage.setItem('poultry_munda_records', JSON.stringify(mundaRecords));
+        localStorage.setItem('poultry_med_records', JSON.stringify(medRecords));
+        localStorage.setItem('poultry_flock_archive', JSON.stringify(flockArchive));
+        localStorage.setItem('poultry_shed_avg_boxes', JSON.stringify(shedAvgBoxesData));
+    }
+
+    function updateFlockBanner() {
+        document.getElementById('bannerFarmName').innerText = flockInfo.farmName || '-';
+        document.getElementById('bannerFlockNo').innerText = flockInfo.flockNo || '-';
+        document.getElementById('bannerFeedName').innerText = flockInfo.feedName || '-';
+        document.getElementById('bannerTotalChicks').innerText = flockInfo.totalChicks ? parseInt(flockInfo.totalChicks).toLocaleString() : '0';
+    }
+
+    function loadEditFormValues() {
+        document.getElementById('editFarmName').value = flockInfo.farmName || '';
+        document.getElementById('editFlockNo').value = flockInfo.flockNo || '';
+        document.getElementById('editFeedName').value = flockInfo.feedName || '';
+        document.getElementById('editTotalChicks').value = flockInfo.totalChicks || '';
+    }
+
+    function updateFarmDetailsInfo() {
+        let fName = document.getElementById('editFarmName').value;
+        let fNo = document.getElementById('editFlockNo').value;
+        let feedN = document.getElementById('editFeedName').value;
+        let tChicks = parseInt(document.getElementById('editTotalChicks').value) || 0;
+        if (!fName || !tChicks) return alert('فارم کا نام اور کل چوزے درج کرنا لازمی ہیں!');
+        flockInfo = { farmName: fName, flockNo: fNo, feedName: feedN, totalChicks: tChicks };
+        saveData(); updateFlockBanner();
+        alert('فارم اور فلاک کی معلومات کامیابی سے اپڈیٹ ہو گئی ہیں!');
+    }
+
+    function calculateDays(arrival, departure) {
+        if (!arrival) return '0 دن';
+        let d1 = new Date(arrival), d2 = departure ? new Date(departure) : new Date();
+        let diffDays = Math.floor((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
+        return diffDays > 0 ? diffDays + ' دن' : '0 دن';
+    }
+
+    function openNewFlockSetupModal() {
+        document.getElementById('setupFarmName').value = flockInfo.farmName || '';
+        document.getElementById('setupFlockNo').value = flockInfo.flockNo || '';
+        document.getElementById('setupFeedName').value = flockInfo.feedName || '';
+        document.getElementById('setupTotalChicks').value = flockInfo.totalChicks || '';
+        document.getElementById('newFlockModal').style.display = 'flex';
+    }
+    function closeNewFlockModal() { document.getElementById('newFlockModal').style.display = 'none'; }
+    
+    function saveNewFlockSetup() {
+        let farmName = document.getElementById('setupFarmName').value;
+        let flockNo = document.getElementById('setupFlockNo').value;
+        let feedName = document.getElementById('setupFeedName').value;
+        let totalChicks = parseInt(document.getElementById('setupTotalChicks').value) || 0;
+        if (!farmName || !totalChicks) return alert('فارم کا نام اور چوزے درج کریں!');
+
+        if (flockInfo.farmName) {
+            flockArchive.push({ flockNo: flockInfo.flockNo || 'پرانا فلاک', farmName: flockInfo.farmName, feedName: flockInfo.feedName, totalChicks: flockInfo.totalChicks, dateArchived: new Date().toLocaleDateString(), sheds, expenses });
+        }
+        sheds = []; expenses = []; managerExpenses = []; incomes = []; feedIns = []; feedOutExternals = []; fuels = []; weightSlips = []; mundaRecords = []; medRecords = [];
+        jamadarData = { name: '', arrival: '', departure: '', payments: [] };
+        for (let i = 1; i <= 4; i++) sheds.push({ name: `Shed ${i}`, initialBirds: 0, records: [] });
+        initAvgData();
+        flockInfo = { farmName, flockNo, feedName, totalChicks };
+        saveData(); updateFlockBanner(); closeNewFlockModal(); renderSheds(); loadEditFormValues();
+        alert("نیا فلاک شروع ہو گیا اور پرانا آرکائیو میں محفوظ کر دیا گیا!");
+    }
+
+    // اب یوزر خود شیڈ کا نام یا نمبر درج کرے گا
+    function promptOpenNewShed() {
+        let nextNum = sheds.length + 1;
+        document.getElementById('customShedNameInput').value = `Shed ${nextNum}`;
+        document.getElementById('customShedModal').style.display = 'flex';
+    }
+    function closeCustomShedModal() {
+        document.getElementById('customShedModal').style.display = 'none';
+    }
+    function saveCustomShed() {
+        let customName = document.getElementById('customShedNameInput').value.trim();
+        if (!customName) return alert('براہ کرم شیڈ کا نام یا نمبر درج کریں!');
+        
+        sheds.push({ name: customName, initialBirds: 0, records: [] });
+        saveData();
+        renderSheds();
+        closeCustomShedModal();
+        openShedModal(sheds.length - 1);
+    }
+
+    function openArchiveModal() { document.getElementById('archiveModal').style.display = 'flex'; renderArchiveList(); }
+    function closeArchiveModal() { document.getElementById('archiveModal').style.display = 'none'; }
+    function renderArchiveList() {
+        let container = document.getElementById('archiveListContainer'); container.innerHTML = '';
+        if (flockArchive.length === 0) return container.innerHTML = '<p style="text-align:center; font-size:12px;">کوئی پرانا فلاک نہیں</p>';
+        flockArchive.forEach(f => {
+            container.innerHTML += `<div style="background:#f1f8e9; padding:8px; border-radius:6px; margin-bottom:6px; border:1px solid #c8e6c9;"><strong>🏛️ ${f.farmName} (${f.flockNo})</strong><br><small>آرکائیو: ${f.dateArchived} | چوزے: ${f.totalChicks}</small></div>`;
+        });
+    }
+
+    function renderSheds() {
+        const container = document.getElementById('shedListContainer'); 
+        if(container) container.innerHTML = '';
+        let totalInit = 0, totalMort = 0, totalCurr = 0, weightedSumWeight = 0, validWeightCount = 0, totalShedBagsAll = 0;
+
+        sheds.forEach((shed, index) => {
+            let shedMort = shed.records.reduce((sum, r) => sum + parseInt(r.mortality || 0), 0);
+            let shedCurr = shed.initialBirds > 0 ? (shed.initialBirds - shedMort) : 0;
+            let latestW = 0; shed.records.forEach(r => { if (r.weight && parseFloat(r.weight) > 0) latestW = parseFloat(r.weight); });
+
+            totalInit += shed.initialBirds; totalMort += shedMort; totalCurr += shedCurr;
+            if (latestW > 0) { weightedSumWeight += latestW; validWeightCount++; }
+
+            let shedBags = shed.records.reduce((sum, r) => sum + parseFloat(r.bags || 0), 0);
+            totalShedBagsAll += shedBags;
+
+            let hasShedData = (shed.initialBirds > 0 || shed.records.length > 0);
+
+            if(container && hasShedData) {
+                const card = document.createElement('div');
+                card.className = 'shed-card';
+                card.onclick = () => openShedModal(index);
+                card.innerHTML = `<div><strong>${shed.name}</strong><br><small>ابتدائی: ${shed.initialBirds} | موجودہ: ${shedCurr} | فیڈ: ${shedBags.toFixed(1)} بوری</small></div><div style="font-weight:bold; color:#2e7d32;">→</div>`;
+                container.appendChild(card);
+            }
+        });
+
+        if (container && container.children.length === 0) {
+            container.innerHTML = `<div style="text-align:center; padding:15px; background:#fff; border-radius:10px; border:1px dashed #2e7d32;">کوئی شیڈ فعال نہیں ہے۔ نیا شیڈ کھولنے کے لیے اوپر دیے گئے بٹن پر کلک کریں۔</div>`;
+        }
+
+        document.getElementById('m-initial').innerText = totalInit.toLocaleString();
+        document.getElementById('m-mortality').innerText = totalMort.toLocaleString();
+        document.getElementById('m-mortality-pct').innerText = totalInit > 0 ? ((totalMort / totalInit) * 100).toFixed(1) + '%' : '0.0%';
+        document.getElementById('m-current').innerText = totalCurr.toLocaleString();
+        document.getElementById('m-feed').innerText = totalShedBagsAll.toFixed(1) + ' بوری';
+
+        let avgW = validWeightCount > 0 ? (weightedSumWeight / validWeightCount) : 0;
+        document.getElementById('m-weight').innerText = avgW > 0 ? (avgW.toFixed(1) + ' g') : '0 g';
+
+        let totalBiomassKg = 0;
+        sheds.forEach(s => {
+            let sMort = s.records.reduce((sum, r) => sum + parseInt(r.mortality || 0), 0);
+            let sCurr = s.initialBirds > 0 ? (s.initialBirds - sMort) : 0;
+            let lW = 0; s.records.forEach(r => { if (r.weight && parseFloat(r.weight) > 0) lW = parseFloat(r.weight); });
+            if (sCurr > 0 && lW > 0) totalBiomassKg += (sCurr * lW) / 1000.0;
+        });
+        document.getElementById('m-fcr').innerText = totalBiomassKg > 0 ? ((totalShedBagsAll * 50) / totalBiomassKg).toFixed(2) : '0.00';
+        document.getElementById('slipCountDisplay').innerText = 'کل پرچیاں: ' + weightSlips.length;
+        renderSummaries();
+    }
+
+    function renderSummaries() {
+        let totalExp = expenses.reduce((s, e) => s + parseFloat(e.amount || 0), 0);
+        let totalInc = incomes.reduce((s, i) => s + parseFloat(i.amount || 0), 0);
+        let totalManagerExp = managerExpenses.reduce((s, m) => s + parseFloat(m.amount || 0), 0);
+        let totalFuel = fuels.reduce((s, f) => s + parseFloat(f.cost || 0), 0);
+        let j = jamadarData;
+        let totalJamadarPaid = j.payments ? j.payments.reduce((s, p) => s + parseFloat(p.amount || 0), 0) : 0;
+
+        let grandTotalExp = totalExp + totalManagerExp + totalFuel + totalJamadarPaid;
+        document.getElementById('grandTotalExpenseDisplay').innerText = 'Rs. ' + grandTotalExp.toLocaleString();
+
+        document.getElementById('totalExpensesDisplay').innerText = 'Rs. ' + totalExp.toLocaleString();
+        document.getElementById('totalIncomeDisplay').innerText = 'Rs. ' + totalInc.toLocaleString();
+        document.getElementById('totalManagerDisplay').innerText = 'Rs. ' + totalManagerExp.toLocaleString();
+        document.getElementById('totalFuelCostDisplay').innerText = 'Rs. ' + totalFuel.toLocaleString();
+
+        let totalCompanyFeed = 0, totalOtherFeed = 0;
+        feedIns.forEach(f => {
+            let bags = parseFloat(f.bags || 0);
+            if (f.sourceType === 'دوسرے فارم سے آئی فیڈ') totalOtherFeed += bags;
+            else totalCompanyFeed += bags;
+        });
+
+        let totalFeedOutExtBags = feedOutExternals.reduce((s, f) => s + parseFloat(f.bags || 0), 0);
+        let totalFeedInBags = totalCompanyFeed + totalOtherFeed;
+        
+        let totalShedBags = 0; sheds.forEach(s => s.records.forEach(r => totalShedBags += parseFloat(r.bags || 0)));
+
+        document.getElementById('totalCompanyFeedDisplay').innerText = totalCompanyFeed.toFixed(1) + ' بوری';
+        document.getElementById('totalOtherFeedDisplay').innerText = totalOtherFeed.toFixed(1) + ' بوری';
+        document.getElementById('totalFeedOutExtDisplay').innerText = totalFeedOutExtBags.toFixed(1) + ' بوری';
+        document.getElementById('totalFeedConsumedDisplay').innerText = totalShedBags.toFixed(1) + ' بوری';
+        
+        let feedStockBalanceVal = totalFeedInBags - (totalShedBags + totalFeedOutExtBags);
+        document.getElementById('feedStockBalance').innerText = feedStockBalanceVal.toFixed(1) + ' بوری';
+
+        document.getElementById('totalJamadarDaysDisplay').innerText = calculateDays(j.arrival, j.departure);
+        document.getElementById('totalJamadarPaidDisplay').innerText = 'Rs. ' + totalJamadarPaid.toLocaleString();
+    }
+
+    function openMasterSharePrompt() { document.getElementById('masterShareModal').style.display = 'flex'; }
+    function closeMasterShareModal() { document.getElementById('masterShareModal').style.display = 'none'; }
+    
+    function shareMasterReportWithDay() {
+        let dayInputVal = document.getElementById('reportDayInput').value;
+        if (!dayInputVal) return alert('دن کا نمبر درج کریں!');
+        let targetDay = parseInt(dayInputVal);
+
+        let lines = [];
+        lines.push(`📊 فلاک رپورٹ (${flockInfo.farmName || 'فارم'} — دن ${targetDay})`);
+        lines.push(`📋 فلاک: ${flockInfo.flockNo || '-'} | فیڈ: ${flockInfo.feedName || '-'}`);
+        lines.push(`-------------------------`);
+
+        let dayTotalMortality = 0;
+        let dayTotalFeed = 0;
+        let foundAny = false;
+
+        sheds.forEach(shed => {
+            let r = shed.records.find(rec => parseInt(rec.day) === targetDay);
+            if (r) {
+                foundAny = true;
+                let mort = parseInt(r.mortality || 0);
+                let feed = parseFloat(r.bags || 0);
+                dayTotalMortality += mort;
+                dayTotalFeed += feed;
+                lines.push(`🔹 ${shed.name}:\n   - اموات: ${mort}\n   - فیڈ: ${feed} بوری\n   - وزن: ${r.weight || '-'}g`);
+            }
+        });
+
+        if (!foundAny) {
+            lines.push(`⚠️ دن ${targetDay} کی کوئی انٹری درج نہیں ہوئی۔`);
+        } else {
+            lines.push(`-------------------------`);
+            lines.push(`❌ کل دن اموات: ${dayTotalMortality}`);
+            lines.push(`🌾 کل دن فیڈ: ${dayTotalFeed.toFixed(1)} بوری`);
+        }
+
+        closeMasterShareModal();
+        window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(lines.join('\n')), '_blank');
+    }
+
+    function shareCashBook() {
+        let totalExp = expenses.reduce((s, e) => s + parseFloat(e.amount || 0), 0);
+        let totalInc = incomes.reduce((s, i) => s + parseFloat(i.amount || 0), 0);
+        let text = `💵 خرچہ رپورٹ - ${flockInfo.farmName}\n🔴 کل فارم اخراجات: Rs. ${totalExp.toLocaleString()}\n🟢 کل آمدن/وصولی: Rs. ${totalInc.toLocaleString()}`;
+        window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(text), '_blank');
+    }
+
+    function shareManagerRegister() {
+        let totalMgr = managerExpenses.reduce((s, m) => s + parseFloat(m.amount || 0), 0);
+        let text = `👨‍💼 منشی / مینیجر خرچہ - ${flockInfo.farmName}\n🟠 کل منشی خرچ: Rs. ${totalMgr.toLocaleString()}`;
+        window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(text), '_blank');
+    }
+
+    function shareFeedStock() {
+        let totalCompanyFeed = 0, totalOtherFeed = 0;
+        feedIns.forEach(f => {
+            let bags = parseFloat(f.bags || 0);
+            if (f.sourceType === 'دوسرے فارم سے آئی فیڈ') totalOtherFeed += bags;
+            else totalCompanyFeed += bags;
+        });
+        let totalOutExt = feedOutExternals.reduce((s, f) => s + parseFloat(f.bags || 0), 0);
+        let totalShedBags = 0; sheds.forEach(s => s.records.forEach(r => totalShedBags += parseFloat(r.bags || 0)));
+        let totalIn = totalCompanyFeed + totalOtherFeed;
+        let balance = totalIn - (totalShedBags + totalOutExt);
+
+        let text = `🌾 فیڈ اسٹاک - ${flockInfo.farmName}\n🔸 کمپنی فیڈ: ${totalCompanyFeed.toFixed(1)} بوری\n🔹 دوسرے فارم آمد: ${totalOtherFeed.toFixed(1)} بوری\n📤 روانگی فیڈ: ${totalOutExt.toFixed(1)} بوری\n🐔 ٹوٹل خوراک: ${totalShedBags.toFixed(1)} بوری\n📦 بقایا اسٹاک: ${balance.toFixed(1)} بوری`;
+        window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(text), '_blank');
+    }
+
+    function shareFuelRegister() {
+        let totalCost = fuels.reduce((s, f) => s + parseFloat(f.cost || 0), 0);
+        let text = `⛽ فیول رپورٹ - ${flockInfo.farmName}\n💰 کل ڈیزل/پیٹرول رقم: Rs. ${totalCost.toLocaleString()}`;
+        window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(text), '_blank');
+    }
+
+    function shareLaborRegister() {
+        let j = jamadarData;
+        let totalPaid = j.payments ? j.payments.reduce((s, p) => s + parseFloat(p.amount || 0), 0) : 0;
+        let text = `👷 جمعدار لسٹ - ${flockInfo.farmName}\n👤 جمعدار: ${j.name || '-'}\n💸 ادا شدہ رقم: Rs. ${totalPaid.toLocaleString()}`;
+        window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(text), '_blank');
+    }
+
+    let currentOpenShed = 0;
+    function openShedModal(index) {
+        currentOpenShed = index;
+        const shed = sheds[index];
+        document.getElementById('modalTitle').innerText = shed.name + ' - ریکارڈ اور انٹری';
+        document.getElementById('initialBirdsInput').value = shed.initialBirds || '';
+        updateModalSummary();
+        document.getElementById('shedModal').style.display = 'flex';
+    }
+    function updateInitialBirds(val) { sheds[currentOpenShed].initialBirds = parseInt(val) || 0; saveData(); updateModalSummary(); renderSheds(); }
+    function updateModalSummary() {
+        const shed = sheds[currentOpenShed];
+        let shedMort = shed.records.reduce((sum, r) => sum + parseInt(r.mortality || 0), 0);
+        let shedCurr = shed.initialBirds > 0 ? (shed.initialBirds - shedMort) : 0;
+        let shedBags = shed.records.reduce((sum, r) => sum + parseFloat(r.bags || 0), 0);
+        document.getElementById('shedSummary').innerHTML = `<b>ابتدائی:</b> ${shed.initialBirds} | <b>موجودہ:</b> ${shedCurr} | <b>کل فیڈ:</b> ${shedBags.toFixed(1)} بوری`;
+        
+        const tbody = document.getElementById('recordsTableBody'); tbody.innerHTML = '';
+        if (shed.records.length === 0) return tbody.innerHTML = '<tr><td colspan="5">کوئی ریکارڈ نہیں</td></tr>';
+        shed.records.forEach((r, idx) => {
+            tbody.innerHTML += `<tr><td>${r.day}</td><td>${r.bags}</td><td>${r.mortality}</td><td>${r.weight}g</td><td><button class="delete-btn" onclick="deleteRecord(${idx})">حذف</button></td></tr>`;
+        });
+    }
+    function closeModal() { document.getElementById('shedModal').style.display = 'none'; renderSheds(); }
+    function addRecord() {
+        const day = parseInt(document.getElementById('dayInput').value);
+        const bags = parseFloat(document.getElementById('feedBagsInput').value);
+        const mort = parseInt(document.getElementById('mortalityInput').value);
+        const weight = document.getElementById('weightInput').value;
+        if (isNaN(day) || isNaN(bags) || isNaN(mort)) return alert('تمام خانے بھریں!');
+        sheds[currentOpenShed].records.push({ day, bags, mortality: mort, weight: weight || '-' });
+        sheds[currentOpenShed].records.sort((a,b) => a.day - b.day);
+        saveData(); updateModalSummary(); renderSheds();
+        document.getElementById('dayInput').value = ''; document.getElementById('feedBagsInput').value = ''; document.getElementById('mortalityInput').value = ''; document.getElementById('weightInput').value = '';
+    }
+    function deleteRecord(idx) { sheds[currentOpenShed].records.splice(idx, 1); saveData(); updateModalSummary(); renderSheds(); }
+
+    function openChartModal() { document.getElementById('chartModal').style.display = 'flex'; renderCharts(); }
+    function closeChartModal() { document.getElementById('chartModal').style.display = 'none'; }
+    function renderCharts() {
+        let daysMap = {};
+        sheds.forEach(shed => {
+            shed.records.forEach(r => {
+                if (!daysMap[r.day]) daysMap[r.day] = { mort: 0, feed: 0, weight: 0, countW: 0 };
+                daysMap[r.day].mort += parseInt(r.mortality || 0);
+                daysMap[r.day].feed += parseFloat(r.bags || 0);
+                if (r.weight && parseFloat(r.weight) > 0) {
+                    daysMap[r.day].weight += parseFloat(r.weight);
+                    daysMap[r.day].countW++;
+                }
+            });
+        });
+        let sortedDays = Object.keys(daysMap).sort((a,b) => a - b);
+        let labels = sortedDays.map(d => 'دن ' + d);
+        let mortData = sortedDays.map(d => daysMap[d].mort);
+        let feedData = sortedDays.map(d => daysMap[d].feed);
+        let weightData = sortedDays.map(d => daysMap[d].countW > 0 ? (daysMap[d].weight / daysMap[d].countW).toFixed(1) : 0);
+
+        if (mortalityFeedChartInstance) mortalityFeedChartInstance.destroy();
+        if (weightChartInstance) weightChartInstance.destroy();
+
+        let ctx1 = document.getElementById('mortalityFeedChart').getContext('2d');
+        mortalityFeedChartInstance = new Chart(ctx1, {
+            type: 'line',
+            data: { labels: labels, datasets: [{ label: 'اموات', data: mortData, borderColor: '#c62828', tension: 0.2 }, { label: 'فیڈ (بوریاں)', data: feedData, borderColor: '#ef6c00', tension: 0.2 }] },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        let ctx2 = document.getElementById('weightChart').getContext('2d');
+        weightChartInstance = new Chart(ctx2, {
+            type: 'line',
+            data: { labels: labels, datasets: [{ label: 'اوسط وزن (گرام)', data: weightData, borderColor: '#c2185b', tension: 0.2 }] },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+
+    function openCashModal() { document.getElementById('cashModal').style.display = 'flex'; renderCashTables(); }
+    function closeCashModal() { document.getElementById('cashModal').style.display = 'none'; renderSheds(); }
+    function addExpense() {
+        let d = document.getElementById('expenseDate').value, desc = document.getElementById('expenseDesc').value, amt = document.getElementById('expenseAmount').value;
+        if(!d || !amt) return alert('تاریخ اور رقم درج کریں');
+        expenses.push({date: d, desc: desc || '-', amount: parseFloat(amt)});
+        saveData(); renderCashTables();
+        document.getElementById('expenseDate').value = ''; document.getElementById('expenseDesc').value = ''; document.getElementById('expenseAmount').value = '';
+    }
+    function deleteExpense(i) { expenses.splice(i, 1); saveData(); renderCashTables(); }
+    function addIncome() {
+        let d = document.getElementById('incomeDate').value, desc = document.getElementById('incomeDesc').value, amt = document.getElementById('incomeAmount').value;
+        if(!d || !amt) return alert('تاریخ اور رقم درج کریں');
+        incomes.push({date: d, desc: desc || '-', amount: parseFloat(amt)});
+        saveData(); renderCashTables();
+        document.getElementById('incomeDate').value = ''; document.getElementById('incomeDesc').value = ''; document.getElementById('incomeAmount').value = '';
+    }
+    function deleteIncome(i) { incomes.splice(i, 1); saveData(); renderCashTables(); }
+    function renderCashTables() {
+        let et = document.getElementById('expenseTableBody'); et.innerHTML = '';
+        expenses.forEach((e, i) => et.innerHTML += `<tr><td>${e.date}</td><td>${e.desc}</td><td>Rs. ${e.amount}</td><td><button class="delete-btn" onclick="deleteExpense(${i})">حذف</button></td></tr>`);
+        let it = document.getElementById('incomeTableBody'); it.innerHTML = '';
+        incomes.forEach((inc, i) => it.innerHTML += `<tr><td>${inc.date}</td><td>${inc.desc}</td><td>Rs. ${inc.amount}</td><td><button class="delete-btn" onclick="deleteIncome(${i})">حذف</button></td></tr>`);
+    }
+
+    function openManagerModal() { document.getElementById('managerModal').style.display = 'flex'; renderManagerTable(); }
+    function closeManagerModal() { document.getElementById('managerModal').style.display = 'none'; renderSheds(); }
+    function addManagerExpense() {
+        let name = document.getElementById('managerNameInput').value, d = document.getElementById('managerDateInput').value, desc = document.getElementById('managerDescInput').value, amt = document.getElementById('managerAmountInput').value;
+        if(!name || !amt) return alert('نام اور رقم درج کریں');
+        managerExpenses.push({name, date: d || '-', desc: desc || '-', amount: parseFloat(amt)});
+        saveData(); renderManagerTable();
+        document.getElementById('managerNameInput').value = ''; document.getElementById('managerDateInput').value = ''; document.getElementById('managerDescInput').value = ''; document.getElementById('managerAmountInput').value = '';
+    }
+    function deleteManagerExpense(i) { managerExpenses.splice(i, 1); saveData(); renderManagerTable(); }
+    function renderManagerTable() {
+        let mt = document.getElementById('managerTableBody'); mt.innerHTML = '';
+        managerExpenses.forEach((m, i) => mt.innerHTML += `<tr><td>${m.date}</td><td>${m.name}</td><td>${m.desc}</td><td>Rs. ${m.amount}</td><td><button class="delete-btn" onclick="deleteManagerExpense(${i})">حذف</button></td></tr>`);
+    }
+
+    function openFeedStockModal() { document.getElementById('feedStockModal').style.display = 'flex'; renderFeedStockTables(); }
+    function closeFeedStockModal() { document.getElementById('feedStockModal').style.display = 'none'; renderSheds(); }
+    function addFeedIn() {
+        let d = document.getElementById('feedInDate').value;
+        let sourceType = document.getElementById('feedSourceType').value;
+        let name = document.getElementById('feedNameIn').value;
+        let num = document.getElementById('feedNumberIn').value;
+        let src = document.getElementById('feedInSource').value;
+        let bags = document.getElementById('feedInBags').value;
+        if(!bags) return alert('بوریاں درج کریں');
+        feedIns.push({date: d || '-', sourceType: sourceType, name: name || '-', number: num || '-', source: src || '-', bags: parseFloat(bags)});
+        saveData(); renderFeedStockTables();
+        document.getElementById('feedInDate').value = ''; document.getElementById('feedNameIn').value = ''; document.getElementById('feedNumberIn').value = ''; document.getElementById('feedInSource').value = ''; document.getElementById('feedInBags').value = '';
+    }
+    function deleteFeedIn(i) { feedIns.splice(i, 1); saveData(); renderFeedStockTables(); }
+
+    function addFeedOutExternal() {
+        let d = document.getElementById('feedOutDate').value;
+        let name = document.getElementById('feedOutName').value;
+        let num = document.getElementById('feedOutNumber').value;
+        let dest = document.getElementById('feedOutDest').value;
+        let bags = document.getElementById('feedOutBags').value;
+        if(!bags) return alert('بوریاں درج کریں');
+        feedOutExternals.push({date: d || '-', name: name || '-', number: num || '-', dest: dest || 'دوسرا فارم', bags: parseFloat(bags)});
+        saveData(); renderFeedStockTables();
+        document.getElementById('feedOutDate').value = ''; document.getElementById('feedOutName').value = ''; document.getElementById('feedOutNumber').value = ''; document.getElementById('feedOutDest').value = ''; document.getElementById('feedOutBags').value = '';
+    }
+    function deleteFeedOutExternal(i) { feedOutExternals.splice(i, 1); saveData(); renderFeedStockTables(); }
+
+    function renderFeedStockTables() {
+        let fit = document.getElementById('feedInTableBody'); fit.innerHTML = '';
+        feedIns.forEach((f, i) => {
+            fit.innerHTML += `<tr><td>${f.date}</td><td><small>${f.sourceType}</small></td><td>${f.name}/${f.number}</td><td>${f.bags} بوری</td><td><button class="delete-btn" onclick="deleteFeedIn(${i})">حذف</button></td></tr>`;
+        });
+        let fot = document.getElementById('feedOutTableBody'); fot.innerHTML = '';
+        feedOutExternals.forEach((f, i) => {
+            fot.innerHTML += `<tr><td>${f.date}</td><td>${f.name}/${f.number}</td><td>${f.dest}</td><td>${f.bags} بوری</td><td><button class="delete-btn" onclick="deleteFeedOutExternal(${i})">حذف</button></td></tr>`;
+        });
+    }
+
+    function openFuelModal() { document.getElementById('fuelModal').style.display = 'flex'; renderFuelTables(); }
+    function closeFuelModal() { document.getElementById('fuelModal').style.display = 'none'; renderSheds(); }
+    function addFuel() {
+        let type = document.getElementById('fuelType').value, d = document.getElementById('fuelDate').value, l = document.getElementById('fuelLiters').value, cost = document.getElementById('fuelCost').value;
+        if(!cost) return alert('رقم درج کریں');
+        fuels.push({type, date: d || '-', liters: parseFloat(l || 0), cost: parseFloat(cost)});
+        saveData(); renderFuelTables();
+        document.getElementById('fuelDate').value = ''; document.getElementById('fuelLiters').value = ''; document.getElementById('fuelCost').value = '';
+    }
+    function deleteFuel(i) { fuels.splice(i, 1); saveData(); renderFuelTables(); }
+    function renderFuelTables() {
+        let ft = document.getElementById('fuelTableBody'); ft.innerHTML = '';
+        fuels.forEach((f, i) => ft.innerHTML += `<tr><td>${f.date}</td><td>${f.type}</td><td>${f.liters}L</td><td>Rs. ${f.cost}</td><td><button class="delete-btn" onclick="deleteFuel(${i})">حذف</button></td></tr>`);
+    }
+
+    function openLaborModal() {
+        document.getElementById('laborModal').style.display = 'flex';
+        document.getElementById('jamadarName').value = jamadarData.name || '';
+        document.getElementById('jamadarArrival').value = jamadarData.arrival || '';
+        document.getElementById('jamadarDeparture').value = jamadarData.departure || '';
+        renderJamadarSection();
+    }
+    function closeLaborModal() { document.getElementById('laborModal').style.display = 'none'; renderSheds(); }
+    function saveJamadarInfo() {
+        jamadarData.name = document.getElementById('jamadarName').value;
+        jamadarData.arrival = document.getElementById('jamadarArrival').value;
+        jamadarData.departure = document.getElementById('jamadarDeparture').value;
+        saveData(); renderJamadarSection(); alert('محفوظ ہو گیا!');
+    }
+    function addJamadarExpense() {
+        let d = document.getElementById('jamadarPayDate').value, amt = document.getElementById('jamadarPayAmount').value, r = document.getElementById('jamadarPayReason').value;
+        if(!amt) return alert('رقم درج کریں');
+        if(!jamadarData.payments) jamadarData.payments = [];
+        jamadarData.payments.push({date: d || '-', amount: parseFloat(amt), reason: r || '-'});
+        saveData(); renderJamadarSection();
+        document.getElementById('jamadarPayDate').value = ''; document.getElementById('jamadarPayAmount').value = ''; document.getElementById('jamadarPayReason').value = '';
+    }
+    function deleteJamadarPayment(i) { jamadarData.payments.splice(i, 1); saveData(); renderJamadarSection(); }
+    function renderJamadarSection() {
+        let c = document.getElementById('jamadarDisplayArea'); c.innerHTML = '';
+        let j = jamadarData;
+        let payRows = '';
+        if(j.payments && j.payments.length > 0) {
+            j.payments.forEach((p, i) => payRows += `<tr><td>${p.date}</td><td>Rs. ${p.amount}</td><td>${p.reason}</td><td><button class="delete-btn" onclick="deleteJamadarPayment(${i})">حذف</button></td></tr>`);
+        } else payRows = `<tr><td colspan="4">کوئی رقم نہیں</td></tr>`;
+        c.innerHTML = `<strong>جمعدار: ${j.name || '-'} (مدت: ${calculateDays(j.arrival, j.departure)})</strong><table><thead><tr><th>تاریخ</th><th>رقم</th><th>تفصیل</th><th>حذف</th></tr></thead><tbody>${payRows}</tbody></table>`;
+    }
+
+    function openSlipModal() { document.getElementById('slipModal').style.display = 'flex'; renderSlipCards(); }
+    function closeSlipModal() { document.getElementById('slipModal').style.display = 'none'; renderSheds(); }
+    function addWeightSlip() {
+        let date = document.getElementById('slipDate').value;
+        let goodsType = document.getElementById('slipGoodsType').value;
+        let directWeight = parseFloat(document.getElementById('slipDirectWeight').value) || 0;
+        let fileInput = document.getElementById('slipImageInput');
+
+        if (!date || !directWeight) return alert('تاریخ اور وزن درج کریں!');
+
+        function saveSlipObj(imgData) {
+            weightSlips.push({ date: date, goodsType: goodsType, directWeight: directWeight, imgData: imgData || '' });
+            saveData(); renderSlipCards();
+            document.getElementById('slipDate').value = ''; document.getElementById('slipDirectWeight').value = ''; fileInput.value = '';
+        }
+
+        if (fileInput.files.length > 0) {
+            let reader = new FileReader();
+            reader.onload = function(e) { saveSlipObj(e.target.result); };
+            reader.readAsDataURL(fileInput.files[0]);
+        } else { saveSlipObj(''); }
+    }
+    function deleteSlip(i) { weightSlips.splice(i, 1); saveData(); renderSlipCards(); }
+    function renderSlipCards() {
+        let container = document.getElementById('slipCardsContainer'); container.innerHTML = '';
+        if (weightSlips.length === 0) return container.innerHTML = '<p style="font-size:12px; text-align:center;">کوئی پرچی نہیں</p>';
+        weightSlips.forEach((slip, i) => {
+            container.innerHTML += `
+                <div style="background: white; padding: 8px; border-radius: 6px; border: 1px solid #b2ebf2; display: flex; justify-content: space-between; align-items: center; margin-bottom:6px;">
+                    <div><strong>${slip.date}</strong> (${slip.goodsType})<br><span style="color:#00838f; font-weight:bold;">وزن: ${slip.directWeight} Kg</span></div>
+                    <div>
+                        ${slip.imgData ? `<button class="share-btn" style="background:#00838f;" onclick="viewSlipImage('${slip.date}', '${slip.imgData}')">تصویر</button>` : ''}
+                        <button class="delete-btn" onclick="deleteSlip(${i})">حذف</button>
+                    </div>
+                </div>`;
+        });
+    }
+    function viewSlipImage(title, dataUrl) {
+        document.getElementById('imageViewTitle').innerText = title;
+        document.getElementById('enlargedSlipImg').src = dataUrl;
+        document.getElementById('imageViewModal').style.display = 'flex';
+    }
+    function closeImageViewModal() { document.getElementById('imageViewModal').style.display = 'none'; }
+
+    function openMedModal() { document.getElementById('medModal').style.display = 'flex'; renderMedTable(); }
+    function closeMedModal() { document.getElementById('medModal').style.display = 'none'; }
+    function addMedRecord() {
+        let d = document.getElementById('medDate').value, n = document.getElementById('medName').value, p = document.getElementById('medPurpose').value, dos = document.getElementById('medDosage').value;
+        if(!n) return alert('نام درج کریں');
+        medRecords.push({date: d || '-', name: n, purpose: p || '-', dosage: dos || '-'});
+        saveData(); renderMedTable();
+        document.getElementById('medDate').value = ''; document.getElementById('medName').value = ''; document.getElementById('medPurpose').value = ''; document.getElementById('medDosage').value = '';
+    }
+    function deleteMedRecord(i) { medRecords.splice(i, 1); saveData(); renderMedTable(); }
+    function renderMedTable() {
+        let t = document.getElementById('medTableBody'); t.innerHTML = '';
+        medRecords.forEach((m, i) => t.innerHTML += `<tr><td>${m.date}</td><td>${m.name}</td><td>${m.purpose}</td><td>${m.dosage}</td><td><button class="delete-btn" onclick="deleteMedRecord(${i})">حذف</button></td></tr>`);
+    }
+
+    function openMundaModal() { document.getElementById('mundaModal').style.display = 'flex'; renderMundaCards(); }
+    function closeMundaModal() { document.getElementById('mundaModal').style.display = 'none'; }
+    function addMundaRecord() {
+        let d = document.getElementById('mundaDate').value, b = document.getElementById('mundaBuyerName').value, w = document.getElementById('mundaWeight').value, c = document.getElementById('mundaCount').value;
+        if(!b || !c) return alert('نام اور تعداد درج کریں');
+        mundaRecords.push({date: d || '-', buyerName: b, weight: parseFloat(w || 0), count: parseInt(c)});
+        saveData(); renderMundaCards();
+        document.getElementById('mundaDate').value = ''; document.getElementById('mundaBuyerName').value = ''; document.getElementById('mundaWeight').value = ''; document.getElementById('mundaCount').value = '';
+    }
+    function deleteMundaRecord(i) { mundaRecords.splice(i, 1); saveData(); renderMundaCards(); }
+    function renderMundaCards() {
+        let container = document.getElementById('mundaCardsContainer'); container.innerHTML = '';
+        if (mundaRecords.length === 0) return container.innerHTML = '<p style="font-size:12px; text-align:center;">کوئی ریکارڈ نہیں</p>';
+        mundaRecords.forEach((m, i) => {
+            container.innerHTML += `<div style="background: white; padding: 8px; border-radius: 6px; border: 1px solid #f8bbd0; display: flex; justify-content: space-between; align-items: center; margin-bottom:6px;"><div><strong>${m.buyerName}</strong> (${m.date})<br><span style="color:#ad1457; font-weight:bold;">وزن: ${m.weight} Kg | تعداد: ${m.count} عدد</span></div><button class="delete-btn" onclick="deleteMundaRecord(${i})">حذف</button></div>`;
+        });
+    }
+
+    function openAvgModal() { document.getElementById('avgModal').style.display = 'flex'; renderShedTabs(); selectAvgShed(currentSelectedAvgShed); }
+    function closeAvgModal() { document.getElementById('avgModal').style.display = 'none'; renderSheds(); }
+    function checkShedHasAvgData(sIdx) {
+        if (!shedAvgBoxesData[sIdx]) return false;
+        for (let b = 0; b < 10; b++) {
+            for (let r = 0; r < 10; r++) {
+                let row = shedAvgBoxesData[sIdx][b][r];
+                if ((row.count && parseFloat(row.count) > 0) || (row.weight && parseFloat(row.weight) > 0)) return true;
+            }
+        }
+        return false;
+    }
+    function renderShedTabs() {
+        let tabsContainer = document.getElementById('shedTabsContainer'); tabsContainer.innerHTML = '';
+        sheds.forEach((shed, idx) => {
+            let hasData = checkShedHasAvgData(idx);
+            let btn = document.createElement('button');
+            btn.className = `shed-tab-btn ${idx === currentSelectedAvgShed ? 'active' : ''} ${hasData ? 'has-data' : ''}`;
+            btn.innerText = shed.name; btn.onclick = () => selectAvgShed(idx);
+            tabsContainer.appendChild(btn);
+        });
+    }
+    function selectAvgShed(sIdx) {
+        currentSelectedAvgShed = sIdx; renderShedTabs();
+        let shedName = (sheds && sheds[sIdx]) ? sheds[sIdx].name : `Shed ${sIdx+1}`;
+        document.getElementById('selectedShedAvgTitle').innerText = `${shedName} کا کل اوسط وزن:`;
+        renderAvgBoxesForShed(sIdx);
+    }
+    function checkWeekHasData(sIdx, bIdx) {
+        if (!shedAvgBoxesData[sIdx] || !shedAvgBoxesData[sIdx][bIdx]) return false;
+        for (let r = 0; r < 10; r++) {
+            let row = shedAvgBoxesData[sIdx][bIdx][r];
+            if ((row.count && parseFloat(row.count) > 0) || (row.weight && parseFloat(row.weight) > 0)) return true;
+        }
+        return false;
+    }
+    function renderAvgBoxesForShed(sIdx) {
+        let container = document.getElementById('boxesContainer'); container.innerHTML = '';
+        if(!shedAvgBoxesData[sIdx]) {
+            shedAvgBoxesData[sIdx] = [];
+            for (let b = 0; b < 10; b++) {
+                let rows = []; for (let r = 0; r < 10; r++) rows.push({ count: '', weight: '' });
+                shedAvgBoxesData[sIdx].push(rows);
+            }
+        }
+        let maxWeekWithData = -1;
+        for (let b = 0; b < 10; b++) { if (checkWeekHasData(sIdx, b)) { maxWeekWithData = b; } }
+        let weeksToShow = Math.max(1, maxWeekWithData + 2);
+        if (weeksToShow > 10) weeksToShow = 10;
+
+        for (let b = 0; b < weeksToShow; b++) {
+            let boxDiv = document.createElement('div');
+            let hasWData = checkWeekHasData(sIdx, b);
+            boxDiv.id = `boxDiv_${sIdx}_${b}`;
+            boxDiv.style.cssText = `background: ${isDarkMode ? '#1e2820' : '#fff'}; border: 2px solid ${hasWData ? '#c2185b' : (isDarkMode ? '#2c3e30' : '#c8e6c9')}; border-radius: 8px; padding: 8px; margin-bottom: 12px;`;
+            
+            let table = document.createElement('table');
+            table.innerHTML = `<thead><tr style="background: ${hasWData ? (isDarkMode ? '#3b1728' : '#fce4ec') : (isDarkMode ? '#161c18' : '#e8f5e9')};"><th>شمار</th><th>مرغی</th><th>وزن (Kg)</th><th>ایوریج (g)</th></tr></thead>`;
+            let tbody = document.createElement('tbody');
+
+            for (let r = 0; r < 10; r++) {
+                let rowData = shedAvgBoxesData[sIdx][b][r];
+                let cVal = rowData.count || '', wVal = rowData.weight || '';
+                let cNum = parseFloat(cVal) || 0, wNum = parseFloat(wVal) || 0;
+                let rowAvgGrams = cNum > 0 ? ((wNum * 1000) / cNum).toFixed(1) : '0';
+
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${r + 1}</td>
+                    <td><input type="number" class="${cVal ? 'filled-input' : ''}" id="bc_${sIdx}_${b}_${r}" value="${cVal}" oninput="updateShedBoxCalc(${sIdx}, ${b})"></td>
+                    <td><input type="number" step="0.01" class="${wVal ? 'filled-input' : ''}" id="bw_${sIdx}_${b}_${r}" value="${wVal}" oninput="updateShedBoxCalc(${sIdx}, ${b})"></td>
+                    <td id="rowAvg_${sIdx}_${b}_${r}" style="font-weight:bold; color:${rowAvgGrams > 0 ? (isDarkMode ? '#40c4ff' : '#0277bd') : '#999'};">${rowAvgGrams} g</td>
+                `;
+                tbody.appendChild(tr);
+            }
+            table.appendChild(tbody);
+            
+            let boxCountSum = 0, boxWeightSumKg = 0;
+            for (let r = 0; r < 10; r++) {
+                boxCountSum += parseFloat(shedAvgBoxesData[sIdx][b][r].count) || 0;
+                boxWeightSumKg += parseFloat(shedAvgBoxesData[sIdx][b][r].weight) || 0;
+            }
+            let boxAvgGrams = boxCountSum > 0 ? ((boxWeightSumKg * 1000) / boxCountSum) : 0;
+
+            let boxHeader = document.createElement('h4');
+            boxHeader.id = `boxHeader_${sIdx}_${b}`;
+            boxHeader.style.cssText = `color: ${hasWData ? '#c2185b' : (isDarkMode ? '#a0bba5' : '#1b5e20')}; font-size: 13px; margin: 0 0 6px 0; font-weight: bold;`;
+            boxHeader.innerHTML = `ہفتہ ${b + 1} <span id="boxSummary_${sIdx}_${b}" style="float: left; font-size: 11px; font-weight: normal;">ایورج: <b>${boxAvgGrams.toFixed(1)}</b> g (${boxCountSum} مرغیاں)</span>`;
+            
+            boxDiv.appendChild(boxHeader); boxDiv.appendChild(table);
+            container.appendChild(boxDiv);
+        }
+        updateGrandAndBoxTotals(sIdx);
+    }
+    function updateShedBoxCalc(sIdx, b) {
+        let boxCountSum = 0, boxWeightSumKg = 0;
+        for (let r = 0; r < 10; r++) {
+            let cEl = document.getElementById(`bc_${sIdx}_${b}_${r}`);
+            let wEl = document.getElementById(`bw_${sIdx}_${b}_${r}`);
+            let cInput = cEl ? cEl.value : '';
+            let wInput = wEl ? wEl.value : '';
+
+            if (cEl) { if (cInput) cEl.classList.add('filled-input'); else cEl.classList.remove('filled-input'); }
+            if (wEl) { if (wInput) wEl.classList.add('filled-input'); else wEl.classList.remove('filled-input'); }
+
+            shedAvgBoxesData[sIdx][b][r].count = cInput;
+            shedAvgBoxesData[sIdx][b][r].weight = wInput;
+
+            let cNum = parseFloat(cInput) || 0, wNum = parseFloat(wInput) || 0;
+            boxCountSum += cNum; boxWeightSumKg += wNum;
+            let rAvg = cNum > 0 ? ((wNum * 1000) / cNum).toFixed(1) : '0';
+            let rAvgEl = document.getElementById(`rowAvg_${sIdx}_${b}_${r}`);
+            if (rAvgEl) {
+                rAvgEl.innerText = `${rAvg} g`;
+                rAvgEl.style.color = rAvg > 0 ? (isDarkMode ? '#40c4ff' : '#0277bd') : '#999';
+            }
+        }
+        let boxAvgGrams = boxCountSum > 0 ? ((boxWeightSumKg * 1000) / boxCountSum) : 0;
+        let boxSummaryEl = document.getElementById(`boxSummary_${sIdx}_${b}`);
+        if (boxSummaryEl) boxSummaryEl.innerHTML = `ایورج: <b>${boxAvgGrams.toFixed(1)}</b> g (${boxCountSum} مرغیاں)`;
+        updateGrandAndBoxTotals(sIdx);
+    }
+    function updateGrandAndBoxTotals(sIdx) {
+        let sTotalCount = 0, sTotalWeightKg = 0;
+        for (let bx = 0; bx < 10; bx++) {
+            for (let rx = 0; rx < 10; rx++) {
+                sTotalCount += parseFloat(shedAvgBoxesData[sIdx][bx][rx].count) || 0;
+                sTotalWeightKg += parseFloat(shedAvgBoxesData[sIdx][bx][rx].weight) || 0;
+            }
+        }
+        let sAvgGrams = sTotalCount > 0 ? ((sTotalWeightKg * 1000) / sTotalCount) : 0;
+        let grandAvgEl = document.getElementById('grandAvgDisplay');
+        if (grandAvgEl) grandAvgEl.innerText = `${sAvgGrams.toFixed(1)} گرام (${(sAvgGrams/1000).toFixed(3)} کلو) - کل مرغیاں: ${sTotalCount}`;
+        renderShedTabs();
+    }
+    function saveAvgData() { saveData(); alert('ایوریج ڈیٹا محفوظ ہو گیا ہے!'); closeAvgModal(); }
+    function shareAvgReport() { window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent('⚖️ ایوریج رپورٹ - پولٹری فارم ماسٹر ایپ (' + flockInfo.farmName + ')'), '_blank'); }
+
+    function exportAllAppData() {
+        const backupData = { flockInfo, sheds, expenses, managerExpenses, incomes, feedIns, feedOutExternals, fuels, weightSlips, mundaRecords, medRecords, flockArchive, jamadarData, shedAvgBoxesData };
+        const dataString = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataString);
+        downloadAnchor.setAttribute("download", `poultry_backup_${new Date().toISOString().slice(0, 10)}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click(); downloadAnchor.remove();
+        alert('بیک اپ ایکسپورٹ ہو گیا!');
+    }
+    function importAllAppData(event) {
+        const file = event.target.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const imp = JSON.parse(e.target.result);
+                if (imp.flockInfo) flockInfo = imp.flockInfo;
+                if (imp.sheds) sheds = imp.sheds;
+                if (imp.expenses) expenses = imp.expenses;
+                if (imp.managerExpenses) managerExpenses = imp.managerExpenses;
+                if (imp.incomes) incomes = imp.incomes;
+                if (imp.feedIns) feedIns = imp.feedIns;
+                if (imp.feedOutExternals) feedOutExternals = imp.feedOutExternals;
+                if (imp.fuels) fuels = imp.fuels;
+                if (imp.weightSlips) weightSlips = imp.weightSlips;
+                if (imp.mundaRecords) mundaRecords = imp.mundaRecords;
+                if (imp.medRecords) medRecords = imp.medRecords;
+                if (imp.flockArchive) flockArchive = imp.flockArchive;
+                if (imp.jamadarData) jamadarData = imp.jamadarData;
+                if (imp.shedAvgBoxesData) shedAvgBoxesData = imp.shedAvgBoxesData;
+                saveData(); updateFlockBanner(); renderSheds(); loadEditFormValues();
+                alert("ڈیٹا کامیابی سے بحال ہو گیا!");
+            } catch(err) { alert("فائل درست نہیں ہے!"); }
+        };
+        reader.readAsText(file);
+    }
+
+    function printFullReport() {
+        document.getElementById('printFarmName').innerText = flockInfo.farmName || '-';
+        document.getElementById('printFlockNo').innerText = flockInfo.flockNo || '-';
+        document.getElementById('printFeedName').innerText = flockInfo.feedName || '-';
+        document.getElementById('printTotalChicksPdf').innerText = flockInfo.totalChicks ? parseInt(flockInfo.totalChicks).toLocaleString() : '0';
+
+        document.getElementById('printSummaryBox').innerHTML = `
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; text-align: center;">
+                <div style="background: white; padding: 4px; border: 1px solid #c8e6c9;"><b>ابتدائی:</b> ${document.getElementById('m-initial').innerText}</div>
+                <div style="background: white; padding: 4px; border: 1px solid #ffcdd2;"><b>اموات:</b> ${document.getElementById('m-mortality').innerText}</div>
+                <div style="background: white; padding: 4px; border: 1px solid #c8e6c9;"><b>زندہ:</b> ${document.getElementById('m-current').innerText}</div>
+                <div style="background: white; padding: 4px; border: 1px solid #ffe0b2;"><b>فیڈ:</b> ${document.getElementById('m-feed').innerText}</div>
+                <div style="background: white; padding: 4px; border: 1px solid #b3e5fc;"><b>وزن:</b> ${document.getElementById('m-weight').innerText}</div>
+                <div style="background: white; padding: 4px; border: 1px solid #b3e5fc;"><b>FCR:</b> ${document.getElementById('m-fcr').innerText}</div>
+            </div>
+        `;
+
+        let totalFarmExp = expenses.reduce((s, e) => s + parseFloat(e.amount || 0), 0);
+        let totalManagerExp = managerExpenses.reduce((s, m) => s + parseFloat(m.amount || 0), 0);
+        let totalJamadarPaid = jamadarData.payments ? jamadarData.payments.reduce((s, p) => s + parseFloat(p.amount || 0), 0) : 0;
+        let totalFuelCost = fuels.reduce((s, f) => s + parseFloat(f.cost || 0), 0);
+
+        let grandTotal = totalFarmExp + totalManagerExp + totalJamadarPaid + totalFuelCost;
+
+        document.getElementById('pdfGrandTotalExpense').innerText = 'Rs. ' + grandTotal.toLocaleString();
+        document.getElementById('pdfFarmExpense').innerText = 'Rs. ' + totalFarmExp.toLocaleString();
+        document.getElementById('pdfManagerExpense').innerText = 'Rs. ' + totalManagerExp.toLocaleString();
+        document.getElementById('pdfJamadarExpense').innerText = 'Rs. ' + totalJamadarPaid.toLocaleString();
+        document.getElementById('pdfFuelExpense').innerText = 'Rs. ' + totalFuelCost.toLocaleString();
+
+        let totalInc = incomes.reduce((s, i) => s + parseFloat(i.amount || 0), 0);
+        let totalFeedInBags = feedIns.reduce((s, f) => s + parseFloat(f.bags || 0), 0);
+        let totalSlipWeight = weightSlips.reduce((s, slip) => s + parseFloat(slip.directWeight || 0), 0);
+
+        document.getElementById('pdfTotalIncome').innerText = 'Rs. ' + totalInc.toLocaleString();
+        document.getElementById('pdfTotalFeedIn').innerText = totalFeedInBags.toFixed(1) + ' بوری';
+        document.getElementById('pdfTotalSlipWeight').innerText = totalSlipWeight.toLocaleString() + ' Kg';
+
+        let expBody = document.getElementById('printExpenseBody'); expBody.innerHTML = '';
+        expenses.forEach(e => { expBody.innerHTML += `<tr><td>${e.date}</td><td>${e.desc}</td><td>Rs. ${e.amount.toLocaleString()}</td></tr>`; });
+
+        let mgrBody = document.getElementById('printManagerBody'); mgrBody.innerHTML = '';
+        managerExpenses.forEach(m => { mgrBody.innerHTML += `<tr><td>${m.date}</td><td>${m.name}</td><td>${m.desc}</td><td>Rs. ${m.amount.toLocaleString()}</td></tr>`; });
+
+        let incBody = document.getElementById('printIncomeBody'); incBody.innerHTML = '';
+        incomes.forEach(i => { incBody.innerHTML += `<tr><td>${i.date}</td><td>${i.desc}</td><td>Rs. ${i.amount.toLocaleString()}</td></tr>`; });
+
+        let feedBody = document.getElementById('printFeedBody'); feedBody.innerHTML = '';
+        feedIns.forEach(f => { feedBody.innerHTML += `<tr><td>${f.date}</td><td><small>${f.sourceType}</small></td><td>${f.name || '-'}/${f.number || '-'}</td><td>${f.source}</td><td>${f.bags} بوری</td></tr>`; });
+        feedOutExternals.forEach(f => { feedBody.innerHTML += `<tr><td>${f.date}</td><td><small>دوسرے فارم روانگی</small></td><td>${f.name || '-'}/${f.number || '-'}</td><td>${f.dest}</td><td>-${f.bags} بوری</td></tr>`; });
+
+        let fuelBody = document.getElementById('printFuelBody'); fuelBody.innerHTML = '';
+        fuels.forEach(f => { fuelBody.innerHTML += `<tr><td>${f.date}</td><td>${f.type}</td><td>${f.liters}L</td><td>Rs. ${f.cost.toLocaleString()}</td></tr>`; });
+
+        let jamadarContainer = document.getElementById('printJamadarContainer');
+        let j = jamadarData;
+        let days = calculateDays(j.arrival, j.departure);
+        let payRowsPrint = '';
+        if(j.payments && j.payments.length > 0) {
+            j.payments.forEach(p => { payRowsPrint += `<li>${p.date} - Rs. ${p.amount.toLocaleString()} (${p.reason})</li>`; });
+        } else { payRowsPrint = '<li>کوئی ادائیگی نہیں</li>'; }
+
+        jamadarContainer.innerHTML = `
+            <p style="margin:2px 0;"><b>جمعدار کا نام:</b> ${j.name || '-'} | <b>مدت:</b> ${days} (آمد: ${j.arrival || '-'} تا ${j.departure || 'ابھی تک'})</p>
+            <p style="margin:2px 0;"><b>کل ادا شدہ رقم:</b> Rs. ${totalJamadarPaid.toLocaleString()}</p>
+            <ul style="margin:4px 0 0 15px; padding:0; font-size:10px;">${payRowsPrint}</ul>
+        `;
+
+        let slipBody = document.getElementById('printSlipBody'); slipBody.innerHTML = '';
+        weightSlips.forEach((s, idx) => { slipBody.innerHTML += `<tr><td>${idx + 1}</td><td>${s.date}</td><td>${s.goodsType}</td><td><b>${s.directWeight} Kg</b></td><td>${s.imgData ? 'تصویر موجود' : 'تصویر نہیں'}</td></tr>`; });
+
+        let mundaBody = document.getElementById('printMundaBody'); mundaBody.innerHTML = '';
+        mundaRecords.forEach((m, idx) => { mundaBody.innerHTML += `<tr><td>${idx + 1}</td><td>${m.date}</td><td>${m.buyerName}</td><td>${m.weight} Kg</td><td>${m.count} عدد</td></tr>`; });
+
+        window.print();
+    }
+
+    loadData();
+</script>
+
+</body>
+</html>
